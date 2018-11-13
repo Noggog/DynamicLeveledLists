@@ -2,26 +2,26 @@
    <ParentRepos>
       <RepoListing>
          <Nickname>CSharpExt</Nickname>
-         <Sha>eede3b05fcc68db0ffd4afecd8e1ec6246280ebf</Sha>
+         <Sha>90dcb42a4b372bc7304e3c2681bf7b7308d068ef</Sha>
          <Path>../CSharpExt</Path>
-         <CommitDate>10-22-2018 18:33:51</CommitDate>
-         <Description>NotifyingSetItem.Unset bugfix</Description>
+         <CommitDate>11-12-2018 18:41:39</CommitDate>
+         <Description>Nuget updates</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
       <RepoListing>
          <Nickname>Loqui</Nickname>
-         <Sha>70788938666b364c127403534545143fbcc0d1d6</Sha>
+         <Sha>d2c20043328da062a08b4c6fde4f3531b207ca13</Sha>
          <Path>../Loqui</Path>
-         <CommitDate>10-14-2018 14:10:24</CommitDate>
-         <Description>Merge fixes</Description>
+         <CommitDate>11-11-2018 00:42:36</CommitDate>
+         <Description>Bugfix for LoquiNotifyingObject.RaiseAndSetIfChanged</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
       <RepoListing>
          <Nickname>Mutagen</Nickname>
-         <Sha>fedd44639ab828969d7f2ee86a6a7216c87651b3</Sha>
+         <Sha>addf4d12fe9ebf339c96826fe27a6d96bfdfdc61</Sha>
          <Path>../Mutagen</Path>
-         <CommitDate>10-24-2018 19:47:41</CommitDate>
-         <Description>Pipeline.TypicalPatch convenience wrappers</Description>
+         <CommitDate>11-12-2018 18:42:07</CommitDate>
+         <Description>Pipline master population avoids adding self to list</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
    </ParentRepos>
