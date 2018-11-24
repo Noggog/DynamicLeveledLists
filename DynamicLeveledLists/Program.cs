@@ -15,6 +15,7 @@ namespace DynamicLeveledLists
     class Program
     {
         static Script DummyScript;
+        const string Prefix = "DLL";
 
         static async Task Main(string[] args)
         {
@@ -36,38 +37,30 @@ namespace DynamicLeveledLists
             var dynamicLeveledLists = new OblivionMod(modKey);
             dynamicLeveledLists.TES4.Author = "Noggog";
 
-            CopyOverDLLScripts(dynamicLeveledLists);
+            CopyOverSource(dynamicLeveledLists);
             AddNPCs(dynamicLeveledLists, flattenedMod);
             AddCreatures(dynamicLeveledLists, flattenedMod);
-            AddGlobals(dynamicLeveledLists, flattenedMod);
             ModifyLLists(dynamicLeveledLists, flattenedMod);
+
             return dynamicLeveledLists;
         }
 
-        static void CopyOverDLLScripts(OblivionMod dynamicLeveledLists)
+        static OblivionMod GetSourceMod()
         {
-            if (!File.Exists(Properties.Settings.Default.ScriptSourceFile))
+            if (!File.Exists(Properties.Settings.Default.SourceFile))
             {
-                throw new ArgumentException($"Script source mod could not be found at location: {Properties.Settings.Default.ScriptSourceFile}");
+                throw new ArgumentException($"DLL source mod could not be found at location: {Properties.Settings.Default.SourceFile}");
             }
-            OblivionMod scriptsSource = OblivionMod.Create_Binary(
-                Properties.Settings.Default.ScriptSourceFile,
-                new ModKey("ScriptSource", master: false));
-            foreach (var script in scriptsSource.Scripts)
-            {
-                var scriptCopy = new Script(dynamicLeveledLists.GetNextFormKey());
-                scriptCopy.CopyFieldsFrom(script);
-                dynamicLeveledLists.Scripts.Items.AddOrUpdate(scriptCopy);
-                if (scriptCopy.EditorID.Equals("DLLDummyScript"))
-                {
-                    DummyScript = scriptCopy;
-                }
-            }
+            return OblivionMod.Create_Binary(
+                Properties.Settings.Default.SourceFile,
+                new ModKey("DLLSource", master: false));
+        }
 
-            if (DummyScript == null)
-            {
-                throw new ArgumentException("Dummy script not found in scripts source mod.");
-            }
+        static void CopyOverSource(OblivionMod dynamicLeveledLists)
+        {
+            var source = GetSourceMod();
+            var duppedRecords = dynamicLeveledLists.CopyInDuplicate(source);
+            DummyScript = (Script)duppedRecords[new FormKey(source.ModKey, 0x0015D2)];
         }
 
         static void AddCreatures(OblivionMod dynamicLeveledLists, OblivionMod flattenedModList)
@@ -159,40 +152,6 @@ namespace DynamicLeveledLists
                 BaseScale = 1,
                 FootWeight = 3,
             };
-        }
-
-        static void AddGlobals(OblivionMod mod, OblivionMod flattenedModList)
-        {
-            mod.Globals.Items.AddOrUpdate(
-                new GlobalShort(mod.GetNextFormKey())
-                {
-                    EditorID = "DLLLimitProcessingCounter",
-                    Data = 0
-                });
-            mod.Globals.Items.AddOrUpdate(
-                new GlobalShort(mod.GetNextFormKey())
-                {
-                    EditorID = "DLLlowTierReducLine",
-                    Data = 0
-                });
-            mod.Globals.Items.AddOrUpdate(
-                new GlobalShort(mod.GetNextFormKey())
-                {
-                    EditorID = "DLLlowTierCutLine",
-                    Data = 0
-                });
-            mod.Globals.Items.AddOrUpdate(
-                new GlobalShort(mod.GetNextFormKey())
-                {
-                    EditorID = "DLLHighTierReducLine",
-                    Data = 0
-                });
-            mod.Globals.Items.AddOrUpdate(
-                new GlobalShort(mod.GetNextFormKey())
-                {
-                    EditorID = "DLLHighTierCutLine",
-                    Data = 0
-                });
         }
     }
 }
