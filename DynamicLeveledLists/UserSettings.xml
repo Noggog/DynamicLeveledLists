@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<Loqui xmlns="http://tempuri.org/LoquiSource.xsd">
+  <Object name="ModSettings" GUID="f211e512-c7b8-4a63-b21b-944ebb7c633d" ID="1">
+    <Fields>
+      <Bool name="Enabled" />
+      <UInt8 name="LowTierReductionLine" />
+      <UInt8 name="LowTierCutLine" />
+      <UInt8 name="HighTierReductionLine" />
+      <UInt8 name="HighTierCutLine" />
+      <Bool name="EpicSpawnsEnabled" />
+      <UInt8 name="EpicTierSoftCutLine" />
+      <UInt8 name="EpicTierCutLine" />
+      <Percent name="EpicTierPercentChance" />
+      <Bool name="ForceTrueLevels" />
+      <Bool name="ReviveDeadLLists" />
+      <RefDirect name="Debug" refName="DebugSettings" nullable="NotNull" />
+      <RefDirect name="Count" refName="CountSettings" nullable="NotNull" />
+      <RefDirect name="Performance" refName="SpawningPerformance" nullable="NotNull" />
+    </Fields>
+  </Object>
+  <Object name="DebugSettings" GUID="9e02a31f-3bff-45de-8bc8-fa804ac0fd1d" ID="2">
+    <Fields>
+      <Bool name="SpawningTracker" />
+      <Bool name="InGameSpawningConsoleLogs" />
+    </Fields>
+  </Object>
+  <Object name="CountSettings" GUID="ea60eee8-33e9-45c9-816e-936ee6923ea5" ID="4">
+    <Fields>
+      <Bool name="Enabled" />
+      <UInt8 name="MaxToSpawn" />
+      <Percent name="BasePercent" />
+      <Percent name="FinalPercent" />
+    </Fields>
+  </Object>
+  <Object name="SpawningPerformance" GUID="fbebf620-18df-4b6f-954b-346bc2d4e111" ID="5">
+    <Fields>
+      <Bool name="Delay" />
+      <Bool name="Confirm" />
+      <Bool name="Cleanup" />
+      <Int16 name="CleanupBatch" />
+    </Fields>
+  </Object>
+</Loqui>

@@ -2,26 +2,34 @@
    <ParentRepos>
       <RepoListing>
          <Nickname>CSharpExt</Nickname>
-         <Sha>52eefabc24fc9eed20d6d9dc3f621d622ad7a03f</Sha>
+         <Sha>5cf5ea6e22315877e3d1b4992265ae2b9d34705e</Sha>
          <Path>../CSharpExt</Path>
-         <CommitDate>11-20-2018 00:19:43</CommitDate>
-         <Description>C# 7.3</Description>
+         <CommitDate>12-07-2018 23:11:40</CommitDate>
+         <Description>Changed CSharpExt to .NET standard library</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
       <RepoListing>
          <Nickname>Loqui</Nickname>
-         <Sha>56da82f89ee79387ee0e2bf933f73bacc2aef23e</Sha>
+         <Sha>888d82c02d7289a19d7e297cf2890050f113aab1</Sha>
          <Path>../Loqui</Path>
-         <CommitDate>11-21-2018 23:56:47</CommitDate>
-         <Description>Bugfix for copy fields unset for loqui objects</Description>
+         <CommitDate>12-13-2018 22:59:56</CommitDate>
+         <Description>Loqui libraries swapped to .NET standard</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
       <RepoListing>
          <Nickname>Mutagen</Nickname>
-         <Sha>6f5bb97ee3b203cb091a0a00d91a3787b9159379</Sha>
+         <Sha>2bcb3b9b63964c84cdca57fd8a12f681dbfc8d70</Sha>
          <Path>../Mutagen</Path>
-         <CommitDate>11-23-2018 19:41:28</CommitDate>
-         <Description>Duplicate work</Description>
+         <CommitDate>12-13-2018 23:00:14</CommitDate>
+         <Description>Libraries swapped to .NET standard</Description>
+         <Author>Justin Swanson</Author>
+      </RepoListing>
+      <RepoListing>
+         <Nickname>DynamicData</Nickname>
+         <Sha>2dd77c48003f4d53e7da680b2346280b2f52483e</Sha>
+         <Path>../DynamicData</Path>
+         <CommitDate>11-25-2018 14:51:01</CommitDate>
+         <Description>IList and IReadOnlyDictionary implementation</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
    </ParentRepos>
