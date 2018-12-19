@@ -2,34 +2,34 @@
    <ParentRepos>
       <RepoListing>
          <Nickname>CSharpExt</Nickname>
-         <Sha>5cf5ea6e22315877e3d1b4992265ae2b9d34705e</Sha>
+         <Sha>0a719ed6ed147414b27009917a7049b9073d5664</Sha>
          <Path>../CSharpExt</Path>
-         <CommitDate>12-07-2018 23:11:40</CommitDate>
-         <Description>Changed CSharpExt to .NET standard library</Description>
+         <CommitDate>12-29-2018 01:15:28</CommitDate>
+         <Description>Fix for SourceSetCache.TryGetValue</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
       <RepoListing>
          <Nickname>Loqui</Nickname>
-         <Sha>888d82c02d7289a19d7e297cf2890050f113aab1</Sha>
+         <Sha>8795f2e55f5b8cd14894df39714c6b00e1487391</Sha>
          <Path>../Loqui</Path>
-         <CommitDate>12-13-2018 22:59:56</CommitDate>
-         <Description>Loqui libraries swapped to .NET standard</Description>
+         <CommitDate>12-29-2018 03:30:03</CommitDate>
+         <Description>Bugfix for reactiveUI /w notifying ctors</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
       <RepoListing>
          <Nickname>Mutagen</Nickname>
-         <Sha>2bcb3b9b63964c84cdca57fd8a12f681dbfc8d70</Sha>
+         <Sha>99c31a86a85cb1fa6677e81aba2a86f521e1039d</Sha>
          <Path>../Mutagen</Path>
-         <CommitDate>12-13-2018 23:00:14</CommitDate>
-         <Description>Libraries swapped to .NET standard</Description>
+         <CommitDate>12-29-2018 17:00:02</CommitDate>
+         <Description>API updates</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
       <RepoListing>
          <Nickname>DynamicData</Nickname>
-         <Sha>2dd77c48003f4d53e7da680b2346280b2f52483e</Sha>
+         <Sha>0dd142a535e76fee9884a530bdacbd7a02077828</Sha>
          <Path>../DynamicData</Path>
-         <CommitDate>11-25-2018 14:51:01</CommitDate>
-         <Description>IList and IReadOnlyDictionary implementation</Description>
+         <CommitDate>12-28-2018 00:52:40</CommitDate>
+         <Description>TryCreateValue</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
    </ParentRepos>

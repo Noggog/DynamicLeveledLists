@@ -74,26 +74,6 @@ namespace DynamicLeveledLists
             sourceEdidRecords.Set(sourceRecords.Values.Select(m => new KeyValuePair<StringCaseAgnostic, MajorRecord>(m.EditorID, m)));
         }
 
-        static void AddCreatures(OblivionMod flattenedModList)
-        {
-            foreach (var crea in flattenedModList.Creatures)
-            {
-                // ToDo
-                // Modify Calc min / Calc max
-                dynamicLeveledLists.Creatures.Items.AddOrUpdate(crea);
-            }
-        }
-
-        static void AddNPCs(OblivionMod flattenedModList)
-        {
-            foreach (var npc in flattenedModList.NPCs)
-            {
-                // ToDo
-                // Modify Calc min / Calc max
-                dynamicLeveledLists.NPCs.Items.AddOrUpdate(npc);
-            }
-        }
-
         static void ModifyLLists(OblivionMod flattenedModList)
         {
             var dummyScript = (Script)sourceEdidRecords["DLLDummyScript"];
@@ -152,7 +132,7 @@ namespace DynamicLeveledLists
                 var ratNPC = GetDummyRat(dynamicLeveledLists.GetNextFormKey());
                 ratNPC.EditorID = $"DLLDummy{ratCount++}";
                 ratNPC.Name = $"DLLdummy";
-                dynamicLeveledLists.Creatures.Items.AddOrUpdate(ratNPC);
+                dynamicLeveledLists.Creatures.Items.Set(ratNPC);
 
                 // Add dummy to LList
                 llist.Entries.Add(
@@ -163,7 +143,7 @@ namespace DynamicLeveledLists
                         Reference = ratNPC
                     });
 
-                dynamicLeveledLists.LeveledCreatures.Items.AddOrUpdate(llist);
+                dynamicLeveledLists.LeveledCreatures.Items.Set(llist);
             }
         }
 
