@@ -30,7 +30,7 @@ namespace DynamicLeveledLists
             }
             await OblivionPipeline.TypicalPatch(
                 mainArgs: args,
-                outputMod: ModKey.Factory("Test.esp"),
+                outputMod: ModKey.Factory("DynamicLeveledLists.esp"),
                 importMask: new GroupMask(false)
                 {
                     Creatures = true,
@@ -46,29 +46,29 @@ namespace DynamicLeveledLists
             dynamicLeveledLists = new OblivionMod(modKey);
             dynamicLeveledLists.TES4.Author = "Noggog";
 
-            CopyOverSource();
-            //AddNPCs(flattenedMod);
-            //AddCreatures(flattenedMod);
+            CopyOverSource(modList);
             ModifyLLists(flattenedMod);
             SetGlobalSettings();
 
             return dynamicLeveledLists;
         }
 
-        static OblivionMod GetSourceMod()
+        static OblivionMod GetSourceMod(ModList<OblivionMod> modList)
         {
             if (!File.Exists(Properties.Settings.Default.SourceFile))
             {
                 throw new ArgumentException($"DLL source mod could not be found at location: {Properties.Settings.Default.SourceFile}");
             }
-            return OblivionMod.Create_Binary(
+            var mod = OblivionMod.Create_Binary(
                 Properties.Settings.Default.SourceFile,
                 sourceModKey);
+            mod.Link(modList);
+            return mod;
         }
 
-        static void CopyOverSource()
+        static void CopyOverSource(ModList<OblivionMod> modList)
         {
-            var source = GetSourceMod();
+            var source = GetSourceMod(modList);
             sourceRecords = dynamicLeveledLists.CopyInDuplicate(source);
             sourceModKey = source.ModKey;
             sourceEdidRecords.Set(sourceRecords.Values.Select(m => new KeyValuePair<StringCaseAgnostic, MajorRecord>(m.EditorID, m)));

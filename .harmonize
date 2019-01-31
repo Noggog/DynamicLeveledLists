@@ -2,34 +2,34 @@
    <ParentRepos>
       <RepoListing>
          <Nickname>CSharpExt</Nickname>
-         <Sha>0a719ed6ed147414b27009917a7049b9073d5664</Sha>
+         <Sha>9281f5e7e8ccace965a83afa8eb6cd32023f0a6c</Sha>
          <Path>../CSharpExt</Path>
-         <CommitDate>12-29-2018 01:15:28</CommitDate>
-         <Description>Fix for SourceSetCache.TryGetValue</Description>
+         <CommitDate>01-30-2019 21:53:30</CommitDate>
+         <Description>Bugfix for SourceSetCache Set(IEnumerable)</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
       <RepoListing>
          <Nickname>Loqui</Nickname>
-         <Sha>8795f2e55f5b8cd14894df39714c6b00e1487391</Sha>
+         <Sha>a7f591e2ad0c834535b3cea8574fd12e5ca1aa78</Sha>
          <Path>../Loqui</Path>
-         <CommitDate>12-29-2018 03:30:03</CommitDate>
-         <Description>Bugfix for reactiveUI /w notifying ctors</Description>
+         <CommitDate>01-21-2019 01:38:09</CommitDate>
+         <Description>Bugfix for XSD generation</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
       <RepoListing>
          <Nickname>Mutagen</Nickname>
-         <Sha>99c31a86a85cb1fa6677e81aba2a86f521e1039d</Sha>
+         <Sha>8a9f9b54088c438b144ddad0c82afe3a63be3f02</Sha>
          <Path>../Mutagen</Path>
-         <CommitDate>12-29-2018 17:00:02</CommitDate>
-         <Description>API updates</Description>
+         <CommitDate>01-30-2019 21:55:21</CommitDate>
+         <Description>Bugfix for if CopyOverDuplicate.  Unlinked formIDs set themselves to null</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
       <RepoListing>
          <Nickname>DynamicData</Nickname>
-         <Sha>0dd142a535e76fee9884a530bdacbd7a02077828</Sha>
+         <Sha>d5c2631f1106016c638f568e4503e94ab95ff2ff</Sha>
          <Path>../DynamicData</Path>
-         <CommitDate>12-28-2018 00:52:40</CommitDate>
-         <Description>TryCreateValue</Description>
+         <CommitDate>01-17-2019 20:23:22</CommitDate>
+         <Description>CollectionCount convenience selector</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
    </ParentRepos>
