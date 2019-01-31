@@ -18,15 +18,53 @@ namespace DynamicLeveledLists
         static Dictionary<FormKey, MajorRecord> sourceRecords;
         static Dictionary<StringCaseAgnostic, MajorRecord> sourceEdidRecords = new Dictionary<StringCaseAgnostic, MajorRecord>();
         static OblivionMod dynamicLeveledLists;
-        static ModSettings settings = new ModSettings();
         static ModKey sourceModKey = new ModKey("DLLSource", master: false);
+        static ModSettings settings = new ModSettings();
+        static ModSettings defaults = new ModSettings()
+        {
+            Enabled = true,
+            LowTierReductionLine = 2,
+            LowTierCutLine = 10,
+            HighTierReductionLine = 2,
+            HighTierCutLine = 8,
+            EpicSpawnsEnabled = true,
+            EpicTierSoftCutLine = 8,
+            EpicTierCutLine = 15,
+            EpicTierPercentChance = 3,
+            ForceTrueLevels = true,
+            ReviveDeadLLists = true,
+            Count = new CountSettings()
+            {
+                MaxToSpawn = 3,
+                BasePercent = 0.2,
+                FinalPercent = 0.25,
+            },
+            Debug = new DebugSettings()
+            {
+                InGameSpawningConsoleLogs = false,
+                SpawningTracker = false
+            },
+            Performance = new SpawningPerformance()
+            {
+                Delay = false,
+                Cleanup = false,
+                Confirm = true,
+                CleanupBatch = 200,
+            }
+        };
 
         static async Task Main(string[] args)
         {
             var settingsFilePath = new FilePath($"{args[0]}/MutagenPatcherSettings/DynamicLeveledLists.xml");
+            // Eventually refactor to use XML copy in call
+            // /w singleton settings object as its own defaults
             if (settingsFilePath.Exists)
             {
                 settings = ModSettings.Create_Xml(settingsFilePath.Path);
+            }
+            else
+            {
+                settings.CopyFieldsFrom(defaults);
             }
             await OblivionPipeline.TypicalPatch(
                 mainArgs: args,

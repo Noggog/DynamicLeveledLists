@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="us-ascii"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -81,6 +81,19 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="ModSettings.xsd">
+      <DependentUpon>UserSettings.xml</DependentUpon>
+    </None>
+    <None Include="DebugSettings.xsd">
+      <DependentUpon>UserSettings.xml</DependentUpon>
+    </None>
+    <None Include="CountSettings.xsd">
+      <DependentUpon>UserSettings.xml</DependentUpon>
+    </None>
+    <None Include="SpawningPerformance.xsd">
+      <DependentUpon>UserSettings.xml</DependentUpon>
+    </None>
+    <None Include="Common.xsd" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\CSharpExt\CSharpExt\CSharpExt.csproj">

@@ -366,7 +366,7 @@ namespace DynamicLeveledLists
             string name = null)
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
-            this.Write_Xml_Internal(
+            this.Write_Xml(
                 node: node,
                 name: name,
                 errorMask: errorMaskBuilder,
@@ -388,9 +388,23 @@ namespace DynamicLeveledLists
                 errorMask: out errorMask,
                 doMasks: doMasks,
                 translationMask: translationMask);
-            topNode.Elements().First().Save(path);
+            topNode.Elements().First().SaveIfChanged(path);
         }
 
+        public void Write_Xml(
+            string path,
+            ErrorMaskBuilder errorMask,
+            TranslationCrystal translationMask,
+            string name = null)
+        {
+            XElement topNode = new XElement("topnode");
+            Write_Xml(
+                node: topNode,
+                name: name,
+                errorMask: errorMask,
+                translationMask: translationMask);
+            topNode.Elements().First().SaveIfChanged(path);
+        }
         public virtual void Write_Xml(
             Stream stream,
             out SpawningPerformance_ErrorMask errorMask,
@@ -409,11 +423,25 @@ namespace DynamicLeveledLists
         }
 
         public void Write_Xml(
+            Stream stream,
+            ErrorMaskBuilder errorMask,
+            TranslationCrystal translationMask,
+            string name = null)
+        {
+            XElement topNode = new XElement("topnode");
+            Write_Xml(
+                node: topNode,
+                name: name,
+                errorMask: errorMask,
+                translationMask: translationMask);
+            topNode.Elements().First().Save(stream);
+        }
+        public void Write_Xml(
             XElement node,
             string name = null,
             SpawningPerformance_TranslationMask translationMask = null)
         {
-            this.Write_Xml_Internal(
+            this.Write_Xml(
                 node: node,
                 name: name,
                 errorMask: null,
@@ -425,12 +453,12 @@ namespace DynamicLeveledLists
             string name = null)
         {
             XElement topNode = new XElement("topnode");
-            Write_Xml_Internal(
+            Write_Xml(
                 node: topNode,
                 name: name,
                 errorMask: null,
                 translationMask: null);
-            topNode.Elements().First().Save(path);
+            topNode.Elements().First().SaveIfChanged(path);
         }
 
         public void Write_Xml(
@@ -438,7 +466,7 @@ namespace DynamicLeveledLists
             string name = null)
         {
             XElement topNode = new XElement("topnode");
-            Write_Xml_Internal(
+            Write_Xml(
                 node: topNode,
                 name: name,
                 errorMask: null,
@@ -446,7 +474,7 @@ namespace DynamicLeveledLists
             topNode.Elements().First().Save(stream);
         }
 
-        protected void Write_Xml_Internal(
+        public void Write_Xml(
             XElement node,
             ErrorMaskBuilder errorMask,
             TranslationCrystal translationMask,
@@ -1696,6 +1724,21 @@ namespace DynamicLeveledLists.Internals
         public bool Confirm;
         public bool Cleanup;
         public bool CleanupBatch;
+        #endregion
+
+        #region Ctors
+        public SpawningPerformance_TranslationMask()
+        {
+        }
+
+        public SpawningPerformance_TranslationMask(bool defaultOn)
+        {
+            this.Delay = defaultOn;
+            this.Confirm = defaultOn;
+            this.Cleanup = defaultOn;
+            this.CleanupBatch = defaultOn;
+        }
+
         #endregion
 
         public TranslationCrystal GetCrystal()

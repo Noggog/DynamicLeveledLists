@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<xs:schema id="CountSettings" targetNamespace="DynamicLeveledLists" elementFormDefault="qualified" xmlns="DynamicLeveledLists" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+   <xs:include schemaLocation="Common.xsd" />
+   <xs:element name="CountSettings" type="CountSettingsType" />
+   <xs:complexType name="CountSettingsType">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+         <xs:element name="Enabled" type="ValueType" minOccurs="0" maxOccurs="1" />
+         <xs:element name="MaxToSpawn" type="ValueType" minOccurs="0" maxOccurs="1" />
+         <xs:element name="BasePercent" type="ValueType" minOccurs="0" maxOccurs="1" />
+         <xs:element name="FinalPercent" type="ValueType" minOccurs="0" maxOccurs="1" />
+      </xs:choice>
+   </xs:complexType>
+</xs:schema>

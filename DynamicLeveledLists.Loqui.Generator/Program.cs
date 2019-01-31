@@ -20,7 +20,7 @@ namespace DynamicLeveledLists.Loqui.Generator
                 ObjectCentralizedDefault = true,
                 HasBeenSetDefault = false,
             };
-            gen.XmlTranslation.ShouldGenerateXSD = false;
+            gen.XmlTranslation.ShouldGenerateXSD = true;
             gen.XmlTranslation.ExportWithIGetter = false;
 
             var proto = gen.AddProtocol(

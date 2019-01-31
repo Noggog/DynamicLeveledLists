@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<xs:schema id="DebugSettings" targetNamespace="DynamicLeveledLists" elementFormDefault="qualified" xmlns="DynamicLeveledLists" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+   <xs:include schemaLocation="Common.xsd" />
+   <xs:element name="DebugSettings" type="DebugSettingsType" />
+   <xs:complexType name="DebugSettingsType">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+         <xs:element name="SpawningTracker" type="ValueType" minOccurs="0" maxOccurs="1" />
+         <xs:element name="InGameSpawningConsoleLogs" type="ValueType" minOccurs="0" maxOccurs="1" />
+      </xs:choice>
+   </xs:complexType>
+</xs:schema>
