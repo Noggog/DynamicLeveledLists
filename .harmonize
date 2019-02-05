@@ -2,34 +2,34 @@
    <ParentRepos>
       <RepoListing>
          <Nickname>CSharpExt</Nickname>
-         <Sha>9281f5e7e8ccace965a83afa8eb6cd32023f0a6c</Sha>
+         <Sha>3a85f5f76645f38b6ec647d8c8308a7b59be9c67</Sha>
          <Path>../CSharpExt</Path>
-         <CommitDate>01-30-2019 21:53:30</CommitDate>
-         <Description>Bugfix for SourceSetCache Set(IEnumerable)</Description>
+         <CommitDate>04-29-2019 18:40:22</CommitDate>
+         <Description>Readded XmlExt.SaveIfChanged</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
       <RepoListing>
          <Nickname>Loqui</Nickname>
-         <Sha>a7f591e2ad0c834535b3cea8574fd12e5ca1aa78</Sha>
+         <Sha>e2af9170350ee655b61beba7f53ab3a851b7960c</Sha>
          <Path>../Loqui</Path>
-         <CommitDate>01-21-2019 01:38:09</CommitDate>
-         <Description>Bugfix for XSD generation</Description>
+         <CommitDate>04-29-2019 18:46:29</CommitDate>
+         <Description>Fixes for File/Dir path generation</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
       <RepoListing>
          <Nickname>Mutagen</Nickname>
-         <Sha>8a9f9b54088c438b144ddad0c82afe3a63be3f02</Sha>
+         <Sha>1f60e5ce2306b31b07548d5704f08ffa8f4091d4</Sha>
          <Path>../Mutagen</Path>
-         <CommitDate>01-30-2019 21:55:21</CommitDate>
-         <Description>Bugfix for if CopyOverDuplicate.  Unlinked formIDs set themselves to null</Description>
+         <CommitDate>04-28-2019 20:05:28</CommitDate>
+         <Description>Mutagen stream /w ReferenceOffset features.  GRUPs now extract entire binary and make substream</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
       <RepoListing>
          <Nickname>DynamicData</Nickname>
-         <Sha>d5c2631f1106016c638f568e4503e94ab95ff2ff</Sha>
+         <Sha>cf7da29e7a13829f638210d1ce6c58c30de4dd86</Sha>
          <Path>../DynamicData</Path>
-         <CommitDate>01-17-2019 20:23:22</CommitDate>
-         <Description>CollectionCount convenience selector</Description>
+         <CommitDate>04-20-2019 16:23:13</CommitDate>
+         <Description>Nuget updates</Description>
          <Author>Justin Swanson</Author>
       </RepoListing>
    </ParentRepos>

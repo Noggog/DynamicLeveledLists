@@ -62,30 +62,8 @@ namespace DynamicLeveledLists
         }
         #endregion
 
-        #region Loqui Getter Interface
-
-        protected object GetNthObject(ushort index) => DebugSettingsCommon.GetNthObject(index, this);
-        object ILoquiObjectGetter.GetNthObject(ushort index) => this.GetNthObject(index);
-
-        protected bool GetNthObjectHasBeenSet(ushort index) => DebugSettingsCommon.GetNthObjectHasBeenSet(index, this);
-        bool ILoquiObjectGetter.GetNthObjectHasBeenSet(ushort index) => this.GetNthObjectHasBeenSet(index);
-
-        protected void UnsetNthObject(ushort index, NotifyingUnsetParameters cmds) => DebugSettingsCommon.UnsetNthObject(index, this, cmds);
-        void ILoquiObjectSetter.UnsetNthObject(ushort index, NotifyingUnsetParameters cmds) => this.UnsetNthObject(index, cmds);
-
-        #endregion
-
-        #region Loqui Interface
-        protected void SetNthObjectHasBeenSet(ushort index, bool on)
-        {
-            DebugSettingsCommon.SetNthObjectHasBeenSet(index, on, this);
-        }
-        void ILoquiObjectSetter.SetNthObjectHasBeenSet(ushort index, bool on) => this.SetNthObjectHasBeenSet(index, on);
-
-        #endregion
-
-        IMask<bool> IEqualsMask<DebugSettings>.GetEqualsMask(DebugSettings rhs) => DebugSettingsCommon.GetEqualsMask(this, rhs);
-        IMask<bool> IEqualsMask<IDebugSettingsGetter>.GetEqualsMask(IDebugSettingsGetter rhs) => DebugSettingsCommon.GetEqualsMask(this, rhs);
+        IMask<bool> IEqualsMask<DebugSettings>.GetEqualsMask(DebugSettings rhs, EqualsMaskHelper.Include include) => DebugSettingsCommon.GetEqualsMask(this, rhs, include);
+        IMask<bool> IEqualsMask<IDebugSettingsGetter>.GetEqualsMask(IDebugSettingsGetter rhs, EqualsMaskHelper.Include include) => DebugSettingsCommon.GetEqualsMask(this, rhs, include);
         #region To String
         public override string ToString()
         {
@@ -143,25 +121,29 @@ namespace DynamicLeveledLists
         #region Xml Create
         [DebuggerStepThrough]
         public static DebugSettings Create_Xml(
-            XElement root,
+            XElement node,
+            MissingCreate missing = MissingCreate.New,
             DebugSettings_TranslationMask translationMask = null)
         {
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: null,
                 translationMask: translationMask?.GetCrystal());
         }
 
         [DebuggerStepThrough]
         public static DebugSettings Create_Xml(
-            XElement root,
+            XElement node,
             out DebugSettings_ErrorMask errorMask,
             bool doMasks = true,
-            DebugSettings_TranslationMask translationMask = null)
+            DebugSettings_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
             var ret = Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: errorMaskBuilder,
                 translationMask: translationMask.GetCrystal());
             errorMask = DebugSettings_ErrorMask.Factory(errorMaskBuilder);
@@ -169,18 +151,28 @@ namespace DynamicLeveledLists
         }
 
         public static DebugSettings Create_Xml(
-            XElement root,
+            XElement node,
             ErrorMaskBuilder errorMask,
-            TranslationCrystal translationMask)
+            TranslationCrystal translationMask,
+            MissingCreate missing = MissingCreate.New)
         {
+            switch (missing)
+            {
+                case MissingCreate.New:
+                case MissingCreate.Null:
+                    if (node == null) return missing == MissingCreate.New ? new DebugSettings() : null;
+                    break;
+                default:
+                    break;
+            }
             var ret = new DebugSettings();
             try
             {
-                foreach (var elem in root.Elements())
+                foreach (var elem in node.Elements())
                 {
-                    Fill_Xml_Internal(
+                    DebugSettingsCommon.FillPublicElement_Xml(
                         item: ret,
-                        root: elem,
+                        node: elem,
                         name: elem.Name.LocalName,
                         errorMask: errorMask,
                         translationMask: translationMask);
@@ -196,142 +188,178 @@ namespace DynamicLeveledLists
 
         public static DebugSettings Create_Xml(
             string path,
+            MissingCreate missing = MissingCreate.New,
             DebugSettings_TranslationMask translationMask = null)
         {
-            var root = XDocument.Load(path).Root;
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 translationMask: translationMask);
         }
 
         public static DebugSettings Create_Xml(
             string path,
             out DebugSettings_ErrorMask errorMask,
-            DebugSettings_TranslationMask translationMask = null)
+            DebugSettings_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
         {
-            var root = XDocument.Load(path).Root;
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: out errorMask,
                 translationMask: translationMask);
         }
 
         public static DebugSettings Create_Xml(
+            string path,
+            ErrorMaskBuilder errorMask,
+            DebugSettings_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
+        {
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
+            return Create_Xml(
+                missing: missing,
+                node: node,
+                errorMask: errorMask,
+                translationMask: translationMask?.GetCrystal());
+        }
+
+        public static DebugSettings Create_Xml(
             Stream stream,
+            MissingCreate missing = MissingCreate.New,
             DebugSettings_TranslationMask translationMask = null)
         {
-            var root = XDocument.Load(stream).Root;
+            var node = XDocument.Load(stream).Root;
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 translationMask: translationMask);
         }
 
         public static DebugSettings Create_Xml(
             Stream stream,
             out DebugSettings_ErrorMask errorMask,
-            DebugSettings_TranslationMask translationMask = null)
+            DebugSettings_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
         {
-            var root = XDocument.Load(stream).Root;
+            var node = XDocument.Load(stream).Root;
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: out errorMask,
                 translationMask: translationMask);
+        }
+
+        public static DebugSettings Create_Xml(
+            Stream stream,
+            ErrorMaskBuilder errorMask,
+            DebugSettings_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
+        {
+            var node = XDocument.Load(stream).Root;
+            return Create_Xml(
+                missing: missing,
+                node: node,
+                errorMask: errorMask,
+                translationMask: translationMask?.GetCrystal());
         }
 
         #endregion
 
         #region Xml Copy In
         public void CopyIn_Xml(
-            XElement root,
-            NotifyingFireParameters cmds = null)
+            XElement node,
+            MissingCreate missing = MissingCreate.New)
         {
             CopyIn_Xml_Internal(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: null,
-                translationMask: null,
-                cmds: cmds);
+                translationMask: null);
         }
 
         public virtual void CopyIn_Xml(
-            XElement root,
+            XElement node,
             out DebugSettings_ErrorMask errorMask,
             DebugSettings_TranslationMask translationMask = null,
-            bool doMasks = true,
-            NotifyingFireParameters cmds = null)
+            MissingCreate missing = MissingCreate.New,
+            bool doMasks = true)
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
             CopyIn_Xml_Internal(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: errorMaskBuilder,
-                translationMask: translationMask?.GetCrystal(),
-                cmds: cmds);
+                translationMask: translationMask?.GetCrystal());
             errorMask = DebugSettings_ErrorMask.Factory(errorMaskBuilder);
         }
 
         protected void CopyIn_Xml_Internal(
-            XElement root,
+            XElement node,
             ErrorMaskBuilder errorMask,
             TranslationCrystal translationMask,
-            NotifyingFireParameters cmds = null)
+            MissingCreate missing = MissingCreate.New)
         {
             LoquiXmlTranslation<DebugSettings>.Instance.CopyIn(
-                root: root,
+                missing: missing,
+                node: node,
                 item: this,
                 skipProtected: true,
                 errorMask: errorMask,
-                translationMask: translationMask,
-                cmds: cmds);
+                translationMask: translationMask);
         }
 
         public void CopyIn_Xml(
             string path,
-            NotifyingFireParameters cmds = null)
+            MissingCreate missing = MissingCreate.New)
         {
-            var root = XDocument.Load(path).Root;
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
             this.CopyIn_Xml(
-                root: root,
-                cmds: cmds);
+                missing: missing,
+                node: node);
         }
 
         public void CopyIn_Xml(
             string path,
             out DebugSettings_ErrorMask errorMask,
             DebugSettings_TranslationMask translationMask,
-            NotifyingFireParameters cmds = null,
+            MissingCreate missing = MissingCreate.New,
             bool doMasks = true)
         {
-            var root = XDocument.Load(path).Root;
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
             this.CopyIn_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: out errorMask,
                 translationMask: translationMask,
-                cmds: cmds,
                 doMasks: doMasks);
         }
 
         public void CopyIn_Xml(
             Stream stream,
-            NotifyingFireParameters cmds = null)
+            MissingCreate missing = MissingCreate.New)
         {
-            var root = XDocument.Load(stream).Root;
+            var node = XDocument.Load(stream).Root;
             this.CopyIn_Xml(
-                root: root,
-                cmds: cmds);
+                missing: missing,
+                node: node);
         }
 
         public void CopyIn_Xml(
             Stream stream,
             out DebugSettings_ErrorMask errorMask,
             DebugSettings_TranslationMask translationMask,
-            NotifyingFireParameters cmds = null,
+            MissingCreate missing = MissingCreate.New,
             bool doMasks = true)
         {
-            var root = XDocument.Load(stream).Root;
+            var node = XDocument.Load(stream).Root;
             this.CopyIn_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: out errorMask,
                 translationMask: translationMask,
-                cmds: cmds,
                 doMasks: doMasks);
         }
 
@@ -347,8 +375,8 @@ namespace DynamicLeveledLists
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
             this.Write_Xml(
-                node: node,
                 name: name,
+                node: node,
                 errorMask: errorMaskBuilder,
                 translationMask: translationMask?.GetCrystal());
             errorMask = DebugSettings_ErrorMask.Factory(errorMaskBuilder);
@@ -361,14 +389,14 @@ namespace DynamicLeveledLists
             bool doMasks = true,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: out errorMask,
                 doMasks: doMasks,
                 translationMask: translationMask);
-            topNode.Elements().First().SaveIfChanged(path);
+            node.Elements().First().SaveIfChanged(path);
         }
 
         public void Write_Xml(
@@ -377,13 +405,13 @@ namespace DynamicLeveledLists
             TranslationCrystal translationMask,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: errorMask,
                 translationMask: translationMask);
-            topNode.Elements().First().SaveIfChanged(path);
+            node.Elements().First().SaveIfChanged(path);
         }
         public virtual void Write_Xml(
             Stream stream,
@@ -392,14 +420,14 @@ namespace DynamicLeveledLists
             bool doMasks = true,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: out errorMask,
                 doMasks: doMasks,
                 translationMask: translationMask);
-            topNode.Elements().First().Save(stream);
+            node.Elements().First().Save(stream);
         }
 
         public void Write_Xml(
@@ -408,13 +436,13 @@ namespace DynamicLeveledLists
             TranslationCrystal translationMask,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: errorMask,
                 translationMask: translationMask);
-            topNode.Elements().First().Save(stream);
+            node.Elements().First().Save(stream);
         }
         public void Write_Xml(
             XElement node,
@@ -422,8 +450,8 @@ namespace DynamicLeveledLists
             DebugSettings_TranslationMask translationMask = null)
         {
             this.Write_Xml(
-                node: node,
                 name: name,
+                node: node,
                 errorMask: null,
                 translationMask: translationMask.GetCrystal());
         }
@@ -432,26 +460,26 @@ namespace DynamicLeveledLists
             string path,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: null,
                 translationMask: null);
-            topNode.Elements().First().SaveIfChanged(path);
+            node.Elements().First().SaveIfChanged(path);
         }
 
         public void Write_Xml(
             Stream stream,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: null,
                 translationMask: null);
-            topNode.Elements().First().Save(stream);
+            node.Elements().First().Save(stream);
         }
 
         public void Write_Xml(
@@ -462,78 +490,12 @@ namespace DynamicLeveledLists
         {
             DebugSettingsCommon.Write_Xml(
                 item: this,
-                node: node,
                 name: name,
+                node: node,
                 errorMask: errorMask,
                 translationMask: translationMask);
         }
         #endregion
-
-        protected static void Fill_Xml_Internal(
-            DebugSettings item,
-            XElement root,
-            string name,
-            ErrorMaskBuilder errorMask,
-            TranslationCrystal translationMask)
-        {
-            switch (name)
-            {
-                case "SpawningTracker":
-                    try
-                    {
-                        errorMask?.PushIndex((int)DebugSettings_FieldIndex.SpawningTracker);
-                        if (BooleanXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Boolean SpawningTrackerParse,
-                            errorMask: errorMask))
-                        {
-                            item.SpawningTracker = SpawningTrackerParse;
-                        }
-                        else
-                        {
-                            item.SpawningTracker = default(Boolean);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "InGameSpawningConsoleLogs":
-                    try
-                    {
-                        errorMask?.PushIndex((int)DebugSettings_FieldIndex.InGameSpawningConsoleLogs);
-                        if (BooleanXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Boolean InGameSpawningConsoleLogsParse,
-                            errorMask: errorMask))
-                        {
-                            item.InGameSpawningConsoleLogs = InGameSpawningConsoleLogsParse;
-                        }
-                        else
-                        {
-                            item.InGameSpawningConsoleLogs = default(Boolean);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
 
         #endregion
 
@@ -602,32 +564,27 @@ namespace DynamicLeveledLists
             return ret;
         }
 
-        public void CopyFieldsFrom(
-            IDebugSettingsGetter rhs,
-            NotifyingFireParameters cmds = null)
+        public void CopyFieldsFrom(IDebugSettingsGetter rhs)
         {
             this.CopyFieldsFrom(
                 rhs: (IDebugSettingsGetter)rhs,
                 def: null,
                 doMasks: false,
                 errorMask: out var errMask,
-                copyMask: null,
-                cmds: cmds);
+                copyMask: null);
         }
 
         public void CopyFieldsFrom(
             IDebugSettingsGetter rhs,
             DebugSettings_CopyMask copyMask,
-            IDebugSettingsGetter def = null,
-            NotifyingFireParameters cmds = null)
+            IDebugSettingsGetter def = null)
         {
             this.CopyFieldsFrom(
                 rhs: rhs,
                 def: def,
                 doMasks: false,
                 errorMask: out var errMask,
-                copyMask: copyMask,
-                cmds: cmds);
+                copyMask: copyMask);
         }
 
         public void CopyFieldsFrom(
@@ -635,7 +592,6 @@ namespace DynamicLeveledLists
             out DebugSettings_ErrorMask errorMask,
             DebugSettings_CopyMask copyMask = null,
             IDebugSettingsGetter def = null,
-            NotifyingFireParameters cmds = null,
             bool doMasks = true)
         {
             var errorMaskBuilder = new ErrorMaskBuilder();
@@ -644,8 +600,7 @@ namespace DynamicLeveledLists
                 rhs: rhs,
                 def: def,
                 errorMask: errorMaskBuilder,
-                copyMask: copyMask,
-                cmds: cmds);
+                copyMask: copyMask);
             errorMask = DebugSettings_ErrorMask.Factory(errorMaskBuilder);
         }
 
@@ -654,7 +609,6 @@ namespace DynamicLeveledLists
             ErrorMaskBuilder errorMask,
             DebugSettings_CopyMask copyMask = null,
             IDebugSettingsGetter def = null,
-            NotifyingFireParameters cmds = null,
             bool doMasks = true)
         {
             DebugSettingsCommon.CopyFieldsFrom(
@@ -662,12 +616,10 @@ namespace DynamicLeveledLists
                 rhs: rhs,
                 def: def,
                 errorMask: errorMask,
-                copyMask: copyMask,
-                cmds: cmds);
+                copyMask: copyMask);
         }
 
-        void ILoquiObjectSetter.SetNthObject(ushort index, object obj, NotifyingFireParameters cmds) => this.SetNthObject(index, obj, cmds);
-        protected void SetNthObject(ushort index, object obj, NotifyingFireParameters cmds = null)
+        protected void SetNthObject(ushort index, object obj)
         {
             DebugSettings_FieldIndex enu = (DebugSettings_FieldIndex)index;
             switch (enu)
@@ -683,17 +635,17 @@ namespace DynamicLeveledLists
             }
         }
 
-        partial void ClearPartial(NotifyingUnsetParameters cmds);
+        partial void ClearPartial();
 
-        protected void CallClearPartial_Internal(NotifyingUnsetParameters cmds)
+        protected void CallClearPartial_Internal()
         {
-            ClearPartial(cmds);
+            ClearPartial();
         }
 
-        public void Clear(NotifyingUnsetParameters cmds = null)
+        public void Clear()
         {
-            CallClearPartial_Internal(cmds);
-            DebugSettingsCommon.Clear(this, cmds);
+            CallClearPartial_Internal();
+            DebugSettingsCommon.Clear(this);
         }
 
 
@@ -725,11 +677,6 @@ namespace DynamicLeveledLists
                     throw new ArgumentException($"Unknown enum type: {enu}");
             }
         }
-        public static void CopyIn(IEnumerable<KeyValuePair<ushort, object>> fields, DebugSettings obj)
-        {
-            ILoquiObjectExt.CopyFieldsIn(obj, fields, def: null, skipProtected: false, cmds: null);
-        }
-
     }
     #endregion
 
@@ -954,8 +901,7 @@ namespace DynamicLeveledLists.Internals
             IDebugSettingsGetter rhs,
             IDebugSettingsGetter def,
             ErrorMaskBuilder errorMask,
-            DebugSettings_CopyMask copyMask,
-            NotifyingFireParameters cmds = null)
+            DebugSettings_CopyMask copyMask)
         {
             if (copyMask?.SpawningTracker ?? true)
             {
@@ -995,77 +941,7 @@ namespace DynamicLeveledLists.Internals
 
         #endregion
 
-        public static void SetNthObjectHasBeenSet(
-            ushort index,
-            bool on,
-            IDebugSettings obj,
-            NotifyingFireParameters cmds = null)
-        {
-            DebugSettings_FieldIndex enu = (DebugSettings_FieldIndex)index;
-            switch (enu)
-            {
-                case DebugSettings_FieldIndex.SpawningTracker:
-                case DebugSettings_FieldIndex.InGameSpawningConsoleLogs:
-                    if (on) break;
-                    throw new ArgumentException("Tried to unset a field which does not have this functionality." + index);
-                default:
-                    throw new ArgumentException($"Index is out of range: {index}");
-            }
-        }
-
-        public static void UnsetNthObject(
-            ushort index,
-            IDebugSettings obj,
-            NotifyingUnsetParameters cmds = null)
-        {
-            DebugSettings_FieldIndex enu = (DebugSettings_FieldIndex)index;
-            switch (enu)
-            {
-                case DebugSettings_FieldIndex.SpawningTracker:
-                    obj.SpawningTracker = default(Boolean);
-                    break;
-                case DebugSettings_FieldIndex.InGameSpawningConsoleLogs:
-                    obj.InGameSpawningConsoleLogs = default(Boolean);
-                    break;
-                default:
-                    throw new ArgumentException($"Index is out of range: {index}");
-            }
-        }
-
-        public static bool GetNthObjectHasBeenSet(
-            ushort index,
-            IDebugSettings obj)
-        {
-            DebugSettings_FieldIndex enu = (DebugSettings_FieldIndex)index;
-            switch (enu)
-            {
-                case DebugSettings_FieldIndex.SpawningTracker:
-                case DebugSettings_FieldIndex.InGameSpawningConsoleLogs:
-                    return true;
-                default:
-                    throw new ArgumentException($"Index is out of range: {index}");
-            }
-        }
-
-        public static object GetNthObject(
-            ushort index,
-            IDebugSettingsGetter obj)
-        {
-            DebugSettings_FieldIndex enu = (DebugSettings_FieldIndex)index;
-            switch (enu)
-            {
-                case DebugSettings_FieldIndex.SpawningTracker:
-                    return obj.SpawningTracker;
-                case DebugSettings_FieldIndex.InGameSpawningConsoleLogs:
-                    return obj.InGameSpawningConsoleLogs;
-                default:
-                    throw new ArgumentException($"Index is out of range: {index}");
-            }
-        }
-
-        public static void Clear(
-            IDebugSettings item,
-            NotifyingUnsetParameters cmds = null)
+        public static void Clear(IDebugSettings item)
         {
             item.SpawningTracker = default(Boolean);
             item.InGameSpawningConsoleLogs = default(Boolean);
@@ -1073,17 +949,23 @@ namespace DynamicLeveledLists.Internals
 
         public static DebugSettings_Mask<bool> GetEqualsMask(
             this IDebugSettingsGetter item,
-            IDebugSettingsGetter rhs)
+            IDebugSettingsGetter rhs,
+            EqualsMaskHelper.Include include = EqualsMaskHelper.Include.All)
         {
             var ret = new DebugSettings_Mask<bool>();
-            FillEqualsMask(item, rhs, ret);
+            FillEqualsMask(
+                item: item,
+                rhs: rhs,
+                ret: ret,
+                include: include);
             return ret;
         }
 
         public static void FillEqualsMask(
             IDebugSettingsGetter item,
             IDebugSettingsGetter rhs,
-            DebugSettings_Mask<bool> ret)
+            DebugSettings_Mask<bool> ret,
+            EqualsMaskHelper.Include include = EqualsMaskHelper.Include.All)
         {
             if (rhs == null) return;
             ret.SpawningTracker = item.SpawningTracker == rhs.SpawningTracker;
@@ -1156,8 +1038,8 @@ namespace DynamicLeveledLists.Internals
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
             Write_Xml(
-                node: node,
                 name: name,
+                node: node,
                 item: item,
                 errorMask: errorMaskBuilder,
                 translationMask: translationMask?.GetCrystal());
@@ -1177,10 +1059,24 @@ namespace DynamicLeveledLists.Internals
             {
                 elem.SetAttributeValue("type", "DynamicLeveledLists.DebugSettings");
             }
+            WriteToNode_Xml(
+                item: item,
+                node: elem,
+                errorMask: errorMask,
+                translationMask: translationMask);
+        }
+        #endregion
+
+        public static void WriteToNode_Xml(
+            this DebugSettings item,
+            XElement node,
+            ErrorMaskBuilder errorMask,
+            TranslationCrystal translationMask)
+        {
             if ((translationMask?.GetShouldTranslate((int)DebugSettings_FieldIndex.SpawningTracker) ?? true))
             {
                 BooleanXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.SpawningTracker),
                     item: item.SpawningTracker,
                     fieldIndex: (int)DebugSettings_FieldIndex.SpawningTracker,
@@ -1189,14 +1085,110 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)DebugSettings_FieldIndex.InGameSpawningConsoleLogs) ?? true))
             {
                 BooleanXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.InGameSpawningConsoleLogs),
                     item: item.InGameSpawningConsoleLogs,
                     fieldIndex: (int)DebugSettings_FieldIndex.InGameSpawningConsoleLogs,
                     errorMask: errorMask);
             }
         }
-        #endregion
+
+        public static void FillPublic_Xml(
+            this DebugSettings item,
+            XElement node,
+            ErrorMaskBuilder errorMask,
+            TranslationCrystal translationMask)
+        {
+            try
+            {
+                foreach (var elem in node.Elements())
+                {
+                    DebugSettingsCommon.FillPublicElement_Xml(
+                        item: item,
+                        node: elem,
+                        name: elem.Name.LocalName,
+                        errorMask: errorMask,
+                        translationMask: translationMask);
+                }
+            }
+            catch (Exception ex)
+            when (errorMask != null)
+            {
+                errorMask.ReportException(ex);
+            }
+        }
+
+        public static void FillPublicElement_Xml(
+            this DebugSettings item,
+            XElement node,
+            string name,
+            ErrorMaskBuilder errorMask,
+            TranslationCrystal translationMask)
+        {
+            switch (name)
+            {
+                case "SpawningTracker":
+                    if ((translationMask?.GetShouldTranslate((int)DebugSettings_FieldIndex.SpawningTracker) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)DebugSettings_FieldIndex.SpawningTracker);
+                            if (BooleanXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Boolean SpawningTrackerParse,
+                                errorMask: errorMask))
+                            {
+                                item.SpawningTracker = SpawningTrackerParse;
+                            }
+                            else
+                            {
+                                item.SpawningTracker = default(Boolean);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "InGameSpawningConsoleLogs":
+                    if ((translationMask?.GetShouldTranslate((int)DebugSettings_FieldIndex.InGameSpawningConsoleLogs) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)DebugSettings_FieldIndex.InGameSpawningConsoleLogs);
+                            if (BooleanXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Boolean InGameSpawningConsoleLogsParse,
+                                errorMask: errorMask))
+                            {
+                                item.InGameSpawningConsoleLogs = InGameSpawningConsoleLogsParse;
+                            }
+                            else
+                            {
+                                item.InGameSpawningConsoleLogs = default(Boolean);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
 
         #endregion
 

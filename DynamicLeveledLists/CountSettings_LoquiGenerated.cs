@@ -78,30 +78,8 @@ namespace DynamicLeveledLists
         }
         #endregion
 
-        #region Loqui Getter Interface
-
-        protected object GetNthObject(ushort index) => CountSettingsCommon.GetNthObject(index, this);
-        object ILoquiObjectGetter.GetNthObject(ushort index) => this.GetNthObject(index);
-
-        protected bool GetNthObjectHasBeenSet(ushort index) => CountSettingsCommon.GetNthObjectHasBeenSet(index, this);
-        bool ILoquiObjectGetter.GetNthObjectHasBeenSet(ushort index) => this.GetNthObjectHasBeenSet(index);
-
-        protected void UnsetNthObject(ushort index, NotifyingUnsetParameters cmds) => CountSettingsCommon.UnsetNthObject(index, this, cmds);
-        void ILoquiObjectSetter.UnsetNthObject(ushort index, NotifyingUnsetParameters cmds) => this.UnsetNthObject(index, cmds);
-
-        #endregion
-
-        #region Loqui Interface
-        protected void SetNthObjectHasBeenSet(ushort index, bool on)
-        {
-            CountSettingsCommon.SetNthObjectHasBeenSet(index, on, this);
-        }
-        void ILoquiObjectSetter.SetNthObjectHasBeenSet(ushort index, bool on) => this.SetNthObjectHasBeenSet(index, on);
-
-        #endregion
-
-        IMask<bool> IEqualsMask<CountSettings>.GetEqualsMask(CountSettings rhs) => CountSettingsCommon.GetEqualsMask(this, rhs);
-        IMask<bool> IEqualsMask<ICountSettingsGetter>.GetEqualsMask(ICountSettingsGetter rhs) => CountSettingsCommon.GetEqualsMask(this, rhs);
+        IMask<bool> IEqualsMask<CountSettings>.GetEqualsMask(CountSettings rhs, EqualsMaskHelper.Include include) => CountSettingsCommon.GetEqualsMask(this, rhs, include);
+        IMask<bool> IEqualsMask<ICountSettingsGetter>.GetEqualsMask(ICountSettingsGetter rhs, EqualsMaskHelper.Include include) => CountSettingsCommon.GetEqualsMask(this, rhs, include);
         #region To String
         public override string ToString()
         {
@@ -163,25 +141,29 @@ namespace DynamicLeveledLists
         #region Xml Create
         [DebuggerStepThrough]
         public static CountSettings Create_Xml(
-            XElement root,
+            XElement node,
+            MissingCreate missing = MissingCreate.New,
             CountSettings_TranslationMask translationMask = null)
         {
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: null,
                 translationMask: translationMask?.GetCrystal());
         }
 
         [DebuggerStepThrough]
         public static CountSettings Create_Xml(
-            XElement root,
+            XElement node,
             out CountSettings_ErrorMask errorMask,
             bool doMasks = true,
-            CountSettings_TranslationMask translationMask = null)
+            CountSettings_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
             var ret = Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: errorMaskBuilder,
                 translationMask: translationMask.GetCrystal());
             errorMask = CountSettings_ErrorMask.Factory(errorMaskBuilder);
@@ -189,18 +171,28 @@ namespace DynamicLeveledLists
         }
 
         public static CountSettings Create_Xml(
-            XElement root,
+            XElement node,
             ErrorMaskBuilder errorMask,
-            TranslationCrystal translationMask)
+            TranslationCrystal translationMask,
+            MissingCreate missing = MissingCreate.New)
         {
+            switch (missing)
+            {
+                case MissingCreate.New:
+                case MissingCreate.Null:
+                    if (node == null) return missing == MissingCreate.New ? new CountSettings() : null;
+                    break;
+                default:
+                    break;
+            }
             var ret = new CountSettings();
             try
             {
-                foreach (var elem in root.Elements())
+                foreach (var elem in node.Elements())
                 {
-                    Fill_Xml_Internal(
+                    CountSettingsCommon.FillPublicElement_Xml(
                         item: ret,
-                        root: elem,
+                        node: elem,
                         name: elem.Name.LocalName,
                         errorMask: errorMask,
                         translationMask: translationMask);
@@ -216,142 +208,178 @@ namespace DynamicLeveledLists
 
         public static CountSettings Create_Xml(
             string path,
+            MissingCreate missing = MissingCreate.New,
             CountSettings_TranslationMask translationMask = null)
         {
-            var root = XDocument.Load(path).Root;
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 translationMask: translationMask);
         }
 
         public static CountSettings Create_Xml(
             string path,
             out CountSettings_ErrorMask errorMask,
-            CountSettings_TranslationMask translationMask = null)
+            CountSettings_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
         {
-            var root = XDocument.Load(path).Root;
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: out errorMask,
                 translationMask: translationMask);
         }
 
         public static CountSettings Create_Xml(
+            string path,
+            ErrorMaskBuilder errorMask,
+            CountSettings_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
+        {
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
+            return Create_Xml(
+                missing: missing,
+                node: node,
+                errorMask: errorMask,
+                translationMask: translationMask?.GetCrystal());
+        }
+
+        public static CountSettings Create_Xml(
             Stream stream,
+            MissingCreate missing = MissingCreate.New,
             CountSettings_TranslationMask translationMask = null)
         {
-            var root = XDocument.Load(stream).Root;
+            var node = XDocument.Load(stream).Root;
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 translationMask: translationMask);
         }
 
         public static CountSettings Create_Xml(
             Stream stream,
             out CountSettings_ErrorMask errorMask,
-            CountSettings_TranslationMask translationMask = null)
+            CountSettings_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
         {
-            var root = XDocument.Load(stream).Root;
+            var node = XDocument.Load(stream).Root;
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: out errorMask,
                 translationMask: translationMask);
+        }
+
+        public static CountSettings Create_Xml(
+            Stream stream,
+            ErrorMaskBuilder errorMask,
+            CountSettings_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
+        {
+            var node = XDocument.Load(stream).Root;
+            return Create_Xml(
+                missing: missing,
+                node: node,
+                errorMask: errorMask,
+                translationMask: translationMask?.GetCrystal());
         }
 
         #endregion
 
         #region Xml Copy In
         public void CopyIn_Xml(
-            XElement root,
-            NotifyingFireParameters cmds = null)
+            XElement node,
+            MissingCreate missing = MissingCreate.New)
         {
             CopyIn_Xml_Internal(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: null,
-                translationMask: null,
-                cmds: cmds);
+                translationMask: null);
         }
 
         public virtual void CopyIn_Xml(
-            XElement root,
+            XElement node,
             out CountSettings_ErrorMask errorMask,
             CountSettings_TranslationMask translationMask = null,
-            bool doMasks = true,
-            NotifyingFireParameters cmds = null)
+            MissingCreate missing = MissingCreate.New,
+            bool doMasks = true)
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
             CopyIn_Xml_Internal(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: errorMaskBuilder,
-                translationMask: translationMask?.GetCrystal(),
-                cmds: cmds);
+                translationMask: translationMask?.GetCrystal());
             errorMask = CountSettings_ErrorMask.Factory(errorMaskBuilder);
         }
 
         protected void CopyIn_Xml_Internal(
-            XElement root,
+            XElement node,
             ErrorMaskBuilder errorMask,
             TranslationCrystal translationMask,
-            NotifyingFireParameters cmds = null)
+            MissingCreate missing = MissingCreate.New)
         {
             LoquiXmlTranslation<CountSettings>.Instance.CopyIn(
-                root: root,
+                missing: missing,
+                node: node,
                 item: this,
                 skipProtected: true,
                 errorMask: errorMask,
-                translationMask: translationMask,
-                cmds: cmds);
+                translationMask: translationMask);
         }
 
         public void CopyIn_Xml(
             string path,
-            NotifyingFireParameters cmds = null)
+            MissingCreate missing = MissingCreate.New)
         {
-            var root = XDocument.Load(path).Root;
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
             this.CopyIn_Xml(
-                root: root,
-                cmds: cmds);
+                missing: missing,
+                node: node);
         }
 
         public void CopyIn_Xml(
             string path,
             out CountSettings_ErrorMask errorMask,
             CountSettings_TranslationMask translationMask,
-            NotifyingFireParameters cmds = null,
+            MissingCreate missing = MissingCreate.New,
             bool doMasks = true)
         {
-            var root = XDocument.Load(path).Root;
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
             this.CopyIn_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: out errorMask,
                 translationMask: translationMask,
-                cmds: cmds,
                 doMasks: doMasks);
         }
 
         public void CopyIn_Xml(
             Stream stream,
-            NotifyingFireParameters cmds = null)
+            MissingCreate missing = MissingCreate.New)
         {
-            var root = XDocument.Load(stream).Root;
+            var node = XDocument.Load(stream).Root;
             this.CopyIn_Xml(
-                root: root,
-                cmds: cmds);
+                missing: missing,
+                node: node);
         }
 
         public void CopyIn_Xml(
             Stream stream,
             out CountSettings_ErrorMask errorMask,
             CountSettings_TranslationMask translationMask,
-            NotifyingFireParameters cmds = null,
+            MissingCreate missing = MissingCreate.New,
             bool doMasks = true)
         {
-            var root = XDocument.Load(stream).Root;
+            var node = XDocument.Load(stream).Root;
             this.CopyIn_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: out errorMask,
                 translationMask: translationMask,
-                cmds: cmds,
                 doMasks: doMasks);
         }
 
@@ -367,8 +395,8 @@ namespace DynamicLeveledLists
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
             this.Write_Xml(
-                node: node,
                 name: name,
+                node: node,
                 errorMask: errorMaskBuilder,
                 translationMask: translationMask?.GetCrystal());
             errorMask = CountSettings_ErrorMask.Factory(errorMaskBuilder);
@@ -381,14 +409,14 @@ namespace DynamicLeveledLists
             bool doMasks = true,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: out errorMask,
                 doMasks: doMasks,
                 translationMask: translationMask);
-            topNode.Elements().First().SaveIfChanged(path);
+            node.Elements().First().SaveIfChanged(path);
         }
 
         public void Write_Xml(
@@ -397,13 +425,13 @@ namespace DynamicLeveledLists
             TranslationCrystal translationMask,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: errorMask,
                 translationMask: translationMask);
-            topNode.Elements().First().SaveIfChanged(path);
+            node.Elements().First().SaveIfChanged(path);
         }
         public virtual void Write_Xml(
             Stream stream,
@@ -412,14 +440,14 @@ namespace DynamicLeveledLists
             bool doMasks = true,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: out errorMask,
                 doMasks: doMasks,
                 translationMask: translationMask);
-            topNode.Elements().First().Save(stream);
+            node.Elements().First().Save(stream);
         }
 
         public void Write_Xml(
@@ -428,13 +456,13 @@ namespace DynamicLeveledLists
             TranslationCrystal translationMask,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: errorMask,
                 translationMask: translationMask);
-            topNode.Elements().First().Save(stream);
+            node.Elements().First().Save(stream);
         }
         public void Write_Xml(
             XElement node,
@@ -442,8 +470,8 @@ namespace DynamicLeveledLists
             CountSettings_TranslationMask translationMask = null)
         {
             this.Write_Xml(
-                node: node,
                 name: name,
+                node: node,
                 errorMask: null,
                 translationMask: translationMask.GetCrystal());
         }
@@ -452,26 +480,26 @@ namespace DynamicLeveledLists
             string path,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: null,
                 translationMask: null);
-            topNode.Elements().First().SaveIfChanged(path);
+            node.Elements().First().SaveIfChanged(path);
         }
 
         public void Write_Xml(
             Stream stream,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: null,
                 translationMask: null);
-            topNode.Elements().First().Save(stream);
+            node.Elements().First().Save(stream);
         }
 
         public void Write_Xml(
@@ -482,130 +510,12 @@ namespace DynamicLeveledLists
         {
             CountSettingsCommon.Write_Xml(
                 item: this,
-                node: node,
                 name: name,
+                node: node,
                 errorMask: errorMask,
                 translationMask: translationMask);
         }
         #endregion
-
-        protected static void Fill_Xml_Internal(
-            CountSettings item,
-            XElement root,
-            string name,
-            ErrorMaskBuilder errorMask,
-            TranslationCrystal translationMask)
-        {
-            switch (name)
-            {
-                case "Enabled":
-                    try
-                    {
-                        errorMask?.PushIndex((int)CountSettings_FieldIndex.Enabled);
-                        if (BooleanXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Boolean EnabledParse,
-                            errorMask: errorMask))
-                        {
-                            item.Enabled = EnabledParse;
-                        }
-                        else
-                        {
-                            item.Enabled = default(Boolean);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "MaxToSpawn":
-                    try
-                    {
-                        errorMask?.PushIndex((int)CountSettings_FieldIndex.MaxToSpawn);
-                        if (ByteXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Byte MaxToSpawnParse,
-                            errorMask: errorMask))
-                        {
-                            item.MaxToSpawn = MaxToSpawnParse;
-                        }
-                        else
-                        {
-                            item.MaxToSpawn = default(Byte);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "BasePercent":
-                    try
-                    {
-                        errorMask?.PushIndex((int)CountSettings_FieldIndex.BasePercent);
-                        if (PercentXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Percent BasePercentParse,
-                            errorMask: errorMask))
-                        {
-                            item.BasePercent = BasePercentParse;
-                        }
-                        else
-                        {
-                            item.BasePercent = default(Percent);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "FinalPercent":
-                    try
-                    {
-                        errorMask?.PushIndex((int)CountSettings_FieldIndex.FinalPercent);
-                        if (PercentXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Percent FinalPercentParse,
-                            errorMask: errorMask))
-                        {
-                            item.FinalPercent = FinalPercentParse;
-                        }
-                        else
-                        {
-                            item.FinalPercent = default(Percent);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
 
         #endregion
 
@@ -676,32 +586,27 @@ namespace DynamicLeveledLists
             return ret;
         }
 
-        public void CopyFieldsFrom(
-            ICountSettingsGetter rhs,
-            NotifyingFireParameters cmds = null)
+        public void CopyFieldsFrom(ICountSettingsGetter rhs)
         {
             this.CopyFieldsFrom(
                 rhs: (ICountSettingsGetter)rhs,
                 def: null,
                 doMasks: false,
                 errorMask: out var errMask,
-                copyMask: null,
-                cmds: cmds);
+                copyMask: null);
         }
 
         public void CopyFieldsFrom(
             ICountSettingsGetter rhs,
             CountSettings_CopyMask copyMask,
-            ICountSettingsGetter def = null,
-            NotifyingFireParameters cmds = null)
+            ICountSettingsGetter def = null)
         {
             this.CopyFieldsFrom(
                 rhs: rhs,
                 def: def,
                 doMasks: false,
                 errorMask: out var errMask,
-                copyMask: copyMask,
-                cmds: cmds);
+                copyMask: copyMask);
         }
 
         public void CopyFieldsFrom(
@@ -709,7 +614,6 @@ namespace DynamicLeveledLists
             out CountSettings_ErrorMask errorMask,
             CountSettings_CopyMask copyMask = null,
             ICountSettingsGetter def = null,
-            NotifyingFireParameters cmds = null,
             bool doMasks = true)
         {
             var errorMaskBuilder = new ErrorMaskBuilder();
@@ -718,8 +622,7 @@ namespace DynamicLeveledLists
                 rhs: rhs,
                 def: def,
                 errorMask: errorMaskBuilder,
-                copyMask: copyMask,
-                cmds: cmds);
+                copyMask: copyMask);
             errorMask = CountSettings_ErrorMask.Factory(errorMaskBuilder);
         }
 
@@ -728,7 +631,6 @@ namespace DynamicLeveledLists
             ErrorMaskBuilder errorMask,
             CountSettings_CopyMask copyMask = null,
             ICountSettingsGetter def = null,
-            NotifyingFireParameters cmds = null,
             bool doMasks = true)
         {
             CountSettingsCommon.CopyFieldsFrom(
@@ -736,12 +638,10 @@ namespace DynamicLeveledLists
                 rhs: rhs,
                 def: def,
                 errorMask: errorMask,
-                copyMask: copyMask,
-                cmds: cmds);
+                copyMask: copyMask);
         }
 
-        void ILoquiObjectSetter.SetNthObject(ushort index, object obj, NotifyingFireParameters cmds) => this.SetNthObject(index, obj, cmds);
-        protected void SetNthObject(ushort index, object obj, NotifyingFireParameters cmds = null)
+        protected void SetNthObject(ushort index, object obj)
         {
             CountSettings_FieldIndex enu = (CountSettings_FieldIndex)index;
             switch (enu)
@@ -763,17 +663,17 @@ namespace DynamicLeveledLists
             }
         }
 
-        partial void ClearPartial(NotifyingUnsetParameters cmds);
+        partial void ClearPartial();
 
-        protected void CallClearPartial_Internal(NotifyingUnsetParameters cmds)
+        protected void CallClearPartial_Internal()
         {
-            ClearPartial(cmds);
+            ClearPartial();
         }
 
-        public void Clear(NotifyingUnsetParameters cmds = null)
+        public void Clear()
         {
-            CallClearPartial_Internal(cmds);
-            CountSettingsCommon.Clear(this, cmds);
+            CallClearPartial_Internal();
+            CountSettingsCommon.Clear(this);
         }
 
 
@@ -811,11 +711,6 @@ namespace DynamicLeveledLists
                     throw new ArgumentException($"Unknown enum type: {enu}");
             }
         }
-        public static void CopyIn(IEnumerable<KeyValuePair<ushort, object>> fields, CountSettings obj)
-        {
-            ILoquiObjectExt.CopyFieldsIn(obj, fields, def: null, skipProtected: false, cmds: null);
-        }
-
     }
     #endregion
 
@@ -1076,8 +971,7 @@ namespace DynamicLeveledLists.Internals
             ICountSettingsGetter rhs,
             ICountSettingsGetter def,
             ErrorMaskBuilder errorMask,
-            CountSettings_CopyMask copyMask,
-            NotifyingFireParameters cmds = null)
+            CountSettings_CopyMask copyMask)
         {
             if (copyMask?.Enabled ?? true)
             {
@@ -1151,91 +1045,7 @@ namespace DynamicLeveledLists.Internals
 
         #endregion
 
-        public static void SetNthObjectHasBeenSet(
-            ushort index,
-            bool on,
-            ICountSettings obj,
-            NotifyingFireParameters cmds = null)
-        {
-            CountSettings_FieldIndex enu = (CountSettings_FieldIndex)index;
-            switch (enu)
-            {
-                case CountSettings_FieldIndex.Enabled:
-                case CountSettings_FieldIndex.MaxToSpawn:
-                case CountSettings_FieldIndex.BasePercent:
-                case CountSettings_FieldIndex.FinalPercent:
-                    if (on) break;
-                    throw new ArgumentException("Tried to unset a field which does not have this functionality." + index);
-                default:
-                    throw new ArgumentException($"Index is out of range: {index}");
-            }
-        }
-
-        public static void UnsetNthObject(
-            ushort index,
-            ICountSettings obj,
-            NotifyingUnsetParameters cmds = null)
-        {
-            CountSettings_FieldIndex enu = (CountSettings_FieldIndex)index;
-            switch (enu)
-            {
-                case CountSettings_FieldIndex.Enabled:
-                    obj.Enabled = default(Boolean);
-                    break;
-                case CountSettings_FieldIndex.MaxToSpawn:
-                    obj.MaxToSpawn = default(Byte);
-                    break;
-                case CountSettings_FieldIndex.BasePercent:
-                    obj.BasePercent = default(Percent);
-                    break;
-                case CountSettings_FieldIndex.FinalPercent:
-                    obj.FinalPercent = default(Percent);
-                    break;
-                default:
-                    throw new ArgumentException($"Index is out of range: {index}");
-            }
-        }
-
-        public static bool GetNthObjectHasBeenSet(
-            ushort index,
-            ICountSettings obj)
-        {
-            CountSettings_FieldIndex enu = (CountSettings_FieldIndex)index;
-            switch (enu)
-            {
-                case CountSettings_FieldIndex.Enabled:
-                case CountSettings_FieldIndex.MaxToSpawn:
-                case CountSettings_FieldIndex.BasePercent:
-                case CountSettings_FieldIndex.FinalPercent:
-                    return true;
-                default:
-                    throw new ArgumentException($"Index is out of range: {index}");
-            }
-        }
-
-        public static object GetNthObject(
-            ushort index,
-            ICountSettingsGetter obj)
-        {
-            CountSettings_FieldIndex enu = (CountSettings_FieldIndex)index;
-            switch (enu)
-            {
-                case CountSettings_FieldIndex.Enabled:
-                    return obj.Enabled;
-                case CountSettings_FieldIndex.MaxToSpawn:
-                    return obj.MaxToSpawn;
-                case CountSettings_FieldIndex.BasePercent:
-                    return obj.BasePercent;
-                case CountSettings_FieldIndex.FinalPercent:
-                    return obj.FinalPercent;
-                default:
-                    throw new ArgumentException($"Index is out of range: {index}");
-            }
-        }
-
-        public static void Clear(
-            ICountSettings item,
-            NotifyingUnsetParameters cmds = null)
+        public static void Clear(ICountSettings item)
         {
             item.Enabled = default(Boolean);
             item.MaxToSpawn = default(Byte);
@@ -1245,23 +1055,29 @@ namespace DynamicLeveledLists.Internals
 
         public static CountSettings_Mask<bool> GetEqualsMask(
             this ICountSettingsGetter item,
-            ICountSettingsGetter rhs)
+            ICountSettingsGetter rhs,
+            EqualsMaskHelper.Include include = EqualsMaskHelper.Include.All)
         {
             var ret = new CountSettings_Mask<bool>();
-            FillEqualsMask(item, rhs, ret);
+            FillEqualsMask(
+                item: item,
+                rhs: rhs,
+                ret: ret,
+                include: include);
             return ret;
         }
 
         public static void FillEqualsMask(
             ICountSettingsGetter item,
             ICountSettingsGetter rhs,
-            CountSettings_Mask<bool> ret)
+            CountSettings_Mask<bool> ret,
+            EqualsMaskHelper.Include include = EqualsMaskHelper.Include.All)
         {
             if (rhs == null) return;
             ret.Enabled = item.Enabled == rhs.Enabled;
             ret.MaxToSpawn = item.MaxToSpawn == rhs.MaxToSpawn;
-            ret.BasePercent = item.BasePercent == rhs.BasePercent;
-            ret.FinalPercent = item.FinalPercent == rhs.FinalPercent;
+            ret.BasePercent = item.BasePercent.Equals(rhs.BasePercent);
+            ret.FinalPercent = item.FinalPercent.Equals(rhs.FinalPercent);
         }
 
         public static string ToString(
@@ -1340,8 +1156,8 @@ namespace DynamicLeveledLists.Internals
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
             Write_Xml(
-                node: node,
                 name: name,
+                node: node,
                 item: item,
                 errorMask: errorMaskBuilder,
                 translationMask: translationMask?.GetCrystal());
@@ -1361,10 +1177,24 @@ namespace DynamicLeveledLists.Internals
             {
                 elem.SetAttributeValue("type", "DynamicLeveledLists.CountSettings");
             }
+            WriteToNode_Xml(
+                item: item,
+                node: elem,
+                errorMask: errorMask,
+                translationMask: translationMask);
+        }
+        #endregion
+
+        public static void WriteToNode_Xml(
+            this CountSettings item,
+            XElement node,
+            ErrorMaskBuilder errorMask,
+            TranslationCrystal translationMask)
+        {
             if ((translationMask?.GetShouldTranslate((int)CountSettings_FieldIndex.Enabled) ?? true))
             {
                 BooleanXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.Enabled),
                     item: item.Enabled,
                     fieldIndex: (int)CountSettings_FieldIndex.Enabled,
@@ -1373,7 +1203,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)CountSettings_FieldIndex.MaxToSpawn) ?? true))
             {
                 ByteXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.MaxToSpawn),
                     item: item.MaxToSpawn,
                     fieldIndex: (int)CountSettings_FieldIndex.MaxToSpawn,
@@ -1382,7 +1212,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)CountSettings_FieldIndex.BasePercent) ?? true))
             {
                 PercentXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.BasePercent),
                     item: item.BasePercent,
                     fieldIndex: (int)CountSettings_FieldIndex.BasePercent,
@@ -1391,14 +1221,168 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)CountSettings_FieldIndex.FinalPercent) ?? true))
             {
                 PercentXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.FinalPercent),
                     item: item.FinalPercent,
                     fieldIndex: (int)CountSettings_FieldIndex.FinalPercent,
                     errorMask: errorMask);
             }
         }
-        #endregion
+
+        public static void FillPublic_Xml(
+            this CountSettings item,
+            XElement node,
+            ErrorMaskBuilder errorMask,
+            TranslationCrystal translationMask)
+        {
+            try
+            {
+                foreach (var elem in node.Elements())
+                {
+                    CountSettingsCommon.FillPublicElement_Xml(
+                        item: item,
+                        node: elem,
+                        name: elem.Name.LocalName,
+                        errorMask: errorMask,
+                        translationMask: translationMask);
+                }
+            }
+            catch (Exception ex)
+            when (errorMask != null)
+            {
+                errorMask.ReportException(ex);
+            }
+        }
+
+        public static void FillPublicElement_Xml(
+            this CountSettings item,
+            XElement node,
+            string name,
+            ErrorMaskBuilder errorMask,
+            TranslationCrystal translationMask)
+        {
+            switch (name)
+            {
+                case "Enabled":
+                    if ((translationMask?.GetShouldTranslate((int)CountSettings_FieldIndex.Enabled) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)CountSettings_FieldIndex.Enabled);
+                            if (BooleanXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Boolean EnabledParse,
+                                errorMask: errorMask))
+                            {
+                                item.Enabled = EnabledParse;
+                            }
+                            else
+                            {
+                                item.Enabled = default(Boolean);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "MaxToSpawn":
+                    if ((translationMask?.GetShouldTranslate((int)CountSettings_FieldIndex.MaxToSpawn) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)CountSettings_FieldIndex.MaxToSpawn);
+                            if (ByteXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Byte MaxToSpawnParse,
+                                errorMask: errorMask))
+                            {
+                                item.MaxToSpawn = MaxToSpawnParse;
+                            }
+                            else
+                            {
+                                item.MaxToSpawn = default(Byte);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "BasePercent":
+                    if ((translationMask?.GetShouldTranslate((int)CountSettings_FieldIndex.BasePercent) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)CountSettings_FieldIndex.BasePercent);
+                            if (PercentXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Percent BasePercentParse,
+                                errorMask: errorMask))
+                            {
+                                item.BasePercent = BasePercentParse;
+                            }
+                            else
+                            {
+                                item.BasePercent = default(Percent);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "FinalPercent":
+                    if ((translationMask?.GetShouldTranslate((int)CountSettings_FieldIndex.FinalPercent) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)CountSettings_FieldIndex.FinalPercent);
+                            if (PercentXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Percent FinalPercentParse,
+                                errorMask: errorMask))
+                            {
+                                item.FinalPercent = FinalPercentParse;
+                            }
+                            else
+                            {
+                                item.FinalPercent = default(Percent);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
 
         #endregion
 

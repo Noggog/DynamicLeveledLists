@@ -162,30 +162,8 @@ namespace DynamicLeveledLists
         }
         #endregion
 
-        #region Loqui Getter Interface
-
-        protected object GetNthObject(ushort index) => ModSettingsCommon.GetNthObject(index, this);
-        object ILoquiObjectGetter.GetNthObject(ushort index) => this.GetNthObject(index);
-
-        protected bool GetNthObjectHasBeenSet(ushort index) => ModSettingsCommon.GetNthObjectHasBeenSet(index, this);
-        bool ILoquiObjectGetter.GetNthObjectHasBeenSet(ushort index) => this.GetNthObjectHasBeenSet(index);
-
-        protected void UnsetNthObject(ushort index, NotifyingUnsetParameters cmds) => ModSettingsCommon.UnsetNthObject(index, this, cmds);
-        void ILoquiObjectSetter.UnsetNthObject(ushort index, NotifyingUnsetParameters cmds) => this.UnsetNthObject(index, cmds);
-
-        #endregion
-
-        #region Loqui Interface
-        protected void SetNthObjectHasBeenSet(ushort index, bool on)
-        {
-            ModSettingsCommon.SetNthObjectHasBeenSet(index, on, this);
-        }
-        void ILoquiObjectSetter.SetNthObjectHasBeenSet(ushort index, bool on) => this.SetNthObjectHasBeenSet(index, on);
-
-        #endregion
-
-        IMask<bool> IEqualsMask<ModSettings>.GetEqualsMask(ModSettings rhs) => ModSettingsCommon.GetEqualsMask(this, rhs);
-        IMask<bool> IEqualsMask<IModSettingsGetter>.GetEqualsMask(IModSettingsGetter rhs) => ModSettingsCommon.GetEqualsMask(this, rhs);
+        IMask<bool> IEqualsMask<ModSettings>.GetEqualsMask(ModSettings rhs, EqualsMaskHelper.Include include) => ModSettingsCommon.GetEqualsMask(this, rhs, include);
+        IMask<bool> IEqualsMask<IModSettingsGetter>.GetEqualsMask(IModSettingsGetter rhs, EqualsMaskHelper.Include include) => ModSettingsCommon.GetEqualsMask(this, rhs, include);
         #region To String
         public override string ToString()
         {
@@ -267,25 +245,29 @@ namespace DynamicLeveledLists
         #region Xml Create
         [DebuggerStepThrough]
         public static ModSettings Create_Xml(
-            XElement root,
+            XElement node,
+            MissingCreate missing = MissingCreate.New,
             ModSettings_TranslationMask translationMask = null)
         {
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: null,
                 translationMask: translationMask?.GetCrystal());
         }
 
         [DebuggerStepThrough]
         public static ModSettings Create_Xml(
-            XElement root,
+            XElement node,
             out ModSettings_ErrorMask errorMask,
             bool doMasks = true,
-            ModSettings_TranslationMask translationMask = null)
+            ModSettings_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
             var ret = Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: errorMaskBuilder,
                 translationMask: translationMask.GetCrystal());
             errorMask = ModSettings_ErrorMask.Factory(errorMaskBuilder);
@@ -293,18 +275,28 @@ namespace DynamicLeveledLists
         }
 
         public static ModSettings Create_Xml(
-            XElement root,
+            XElement node,
             ErrorMaskBuilder errorMask,
-            TranslationCrystal translationMask)
+            TranslationCrystal translationMask,
+            MissingCreate missing = MissingCreate.New)
         {
+            switch (missing)
+            {
+                case MissingCreate.New:
+                case MissingCreate.Null:
+                    if (node == null) return missing == MissingCreate.New ? new ModSettings() : null;
+                    break;
+                default:
+                    break;
+            }
             var ret = new ModSettings();
             try
             {
-                foreach (var elem in root.Elements())
+                foreach (var elem in node.Elements())
                 {
-                    Fill_Xml_Internal(
+                    ModSettingsCommon.FillPublicElement_Xml(
                         item: ret,
-                        root: elem,
+                        node: elem,
                         name: elem.Name.LocalName,
                         errorMask: errorMask,
                         translationMask: translationMask);
@@ -320,142 +312,178 @@ namespace DynamicLeveledLists
 
         public static ModSettings Create_Xml(
             string path,
+            MissingCreate missing = MissingCreate.New,
             ModSettings_TranslationMask translationMask = null)
         {
-            var root = XDocument.Load(path).Root;
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 translationMask: translationMask);
         }
 
         public static ModSettings Create_Xml(
             string path,
             out ModSettings_ErrorMask errorMask,
-            ModSettings_TranslationMask translationMask = null)
+            ModSettings_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
         {
-            var root = XDocument.Load(path).Root;
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: out errorMask,
                 translationMask: translationMask);
         }
 
         public static ModSettings Create_Xml(
+            string path,
+            ErrorMaskBuilder errorMask,
+            ModSettings_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
+        {
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
+            return Create_Xml(
+                missing: missing,
+                node: node,
+                errorMask: errorMask,
+                translationMask: translationMask?.GetCrystal());
+        }
+
+        public static ModSettings Create_Xml(
             Stream stream,
+            MissingCreate missing = MissingCreate.New,
             ModSettings_TranslationMask translationMask = null)
         {
-            var root = XDocument.Load(stream).Root;
+            var node = XDocument.Load(stream).Root;
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 translationMask: translationMask);
         }
 
         public static ModSettings Create_Xml(
             Stream stream,
             out ModSettings_ErrorMask errorMask,
-            ModSettings_TranslationMask translationMask = null)
+            ModSettings_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
         {
-            var root = XDocument.Load(stream).Root;
+            var node = XDocument.Load(stream).Root;
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: out errorMask,
                 translationMask: translationMask);
+        }
+
+        public static ModSettings Create_Xml(
+            Stream stream,
+            ErrorMaskBuilder errorMask,
+            ModSettings_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
+        {
+            var node = XDocument.Load(stream).Root;
+            return Create_Xml(
+                missing: missing,
+                node: node,
+                errorMask: errorMask,
+                translationMask: translationMask?.GetCrystal());
         }
 
         #endregion
 
         #region Xml Copy In
         public void CopyIn_Xml(
-            XElement root,
-            NotifyingFireParameters cmds = null)
+            XElement node,
+            MissingCreate missing = MissingCreate.New)
         {
             CopyIn_Xml_Internal(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: null,
-                translationMask: null,
-                cmds: cmds);
+                translationMask: null);
         }
 
         public virtual void CopyIn_Xml(
-            XElement root,
+            XElement node,
             out ModSettings_ErrorMask errorMask,
             ModSettings_TranslationMask translationMask = null,
-            bool doMasks = true,
-            NotifyingFireParameters cmds = null)
+            MissingCreate missing = MissingCreate.New,
+            bool doMasks = true)
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
             CopyIn_Xml_Internal(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: errorMaskBuilder,
-                translationMask: translationMask?.GetCrystal(),
-                cmds: cmds);
+                translationMask: translationMask?.GetCrystal());
             errorMask = ModSettings_ErrorMask.Factory(errorMaskBuilder);
         }
 
         protected void CopyIn_Xml_Internal(
-            XElement root,
+            XElement node,
             ErrorMaskBuilder errorMask,
             TranslationCrystal translationMask,
-            NotifyingFireParameters cmds = null)
+            MissingCreate missing = MissingCreate.New)
         {
             LoquiXmlTranslation<ModSettings>.Instance.CopyIn(
-                root: root,
+                missing: missing,
+                node: node,
                 item: this,
                 skipProtected: true,
                 errorMask: errorMask,
-                translationMask: translationMask,
-                cmds: cmds);
+                translationMask: translationMask);
         }
 
         public void CopyIn_Xml(
             string path,
-            NotifyingFireParameters cmds = null)
+            MissingCreate missing = MissingCreate.New)
         {
-            var root = XDocument.Load(path).Root;
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
             this.CopyIn_Xml(
-                root: root,
-                cmds: cmds);
+                missing: missing,
+                node: node);
         }
 
         public void CopyIn_Xml(
             string path,
             out ModSettings_ErrorMask errorMask,
             ModSettings_TranslationMask translationMask,
-            NotifyingFireParameters cmds = null,
+            MissingCreate missing = MissingCreate.New,
             bool doMasks = true)
         {
-            var root = XDocument.Load(path).Root;
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
             this.CopyIn_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: out errorMask,
                 translationMask: translationMask,
-                cmds: cmds,
                 doMasks: doMasks);
         }
 
         public void CopyIn_Xml(
             Stream stream,
-            NotifyingFireParameters cmds = null)
+            MissingCreate missing = MissingCreate.New)
         {
-            var root = XDocument.Load(stream).Root;
+            var node = XDocument.Load(stream).Root;
             this.CopyIn_Xml(
-                root: root,
-                cmds: cmds);
+                missing: missing,
+                node: node);
         }
 
         public void CopyIn_Xml(
             Stream stream,
             out ModSettings_ErrorMask errorMask,
             ModSettings_TranslationMask translationMask,
-            NotifyingFireParameters cmds = null,
+            MissingCreate missing = MissingCreate.New,
             bool doMasks = true)
         {
-            var root = XDocument.Load(stream).Root;
+            var node = XDocument.Load(stream).Root;
             this.CopyIn_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: out errorMask,
                 translationMask: translationMask,
-                cmds: cmds,
                 doMasks: doMasks);
         }
 
@@ -471,8 +499,8 @@ namespace DynamicLeveledLists
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
             this.Write_Xml(
-                node: node,
                 name: name,
+                node: node,
                 errorMask: errorMaskBuilder,
                 translationMask: translationMask?.GetCrystal());
             errorMask = ModSettings_ErrorMask.Factory(errorMaskBuilder);
@@ -485,14 +513,14 @@ namespace DynamicLeveledLists
             bool doMasks = true,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: out errorMask,
                 doMasks: doMasks,
                 translationMask: translationMask);
-            topNode.Elements().First().SaveIfChanged(path);
+            node.Elements().First().SaveIfChanged(path);
         }
 
         public void Write_Xml(
@@ -501,13 +529,13 @@ namespace DynamicLeveledLists
             TranslationCrystal translationMask,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: errorMask,
                 translationMask: translationMask);
-            topNode.Elements().First().SaveIfChanged(path);
+            node.Elements().First().SaveIfChanged(path);
         }
         public virtual void Write_Xml(
             Stream stream,
@@ -516,14 +544,14 @@ namespace DynamicLeveledLists
             bool doMasks = true,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: out errorMask,
                 doMasks: doMasks,
                 translationMask: translationMask);
-            topNode.Elements().First().Save(stream);
+            node.Elements().First().Save(stream);
         }
 
         public void Write_Xml(
@@ -532,13 +560,13 @@ namespace DynamicLeveledLists
             TranslationCrystal translationMask,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: errorMask,
                 translationMask: translationMask);
-            topNode.Elements().First().Save(stream);
+            node.Elements().First().Save(stream);
         }
         public void Write_Xml(
             XElement node,
@@ -546,8 +574,8 @@ namespace DynamicLeveledLists
             ModSettings_TranslationMask translationMask = null)
         {
             this.Write_Xml(
-                node: node,
                 name: name,
+                node: node,
                 errorMask: null,
                 translationMask: translationMask.GetCrystal());
         }
@@ -556,26 +584,26 @@ namespace DynamicLeveledLists
             string path,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: null,
                 translationMask: null);
-            topNode.Elements().First().SaveIfChanged(path);
+            node.Elements().First().SaveIfChanged(path);
         }
 
         public void Write_Xml(
             Stream stream,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: null,
                 translationMask: null);
-            topNode.Elements().First().Save(stream);
+            node.Elements().First().Save(stream);
         }
 
         public void Write_Xml(
@@ -586,393 +614,12 @@ namespace DynamicLeveledLists
         {
             ModSettingsCommon.Write_Xml(
                 item: this,
-                node: node,
                 name: name,
+                node: node,
                 errorMask: errorMask,
                 translationMask: translationMask);
         }
         #endregion
-
-        protected static void Fill_Xml_Internal(
-            ModSettings item,
-            XElement root,
-            string name,
-            ErrorMaskBuilder errorMask,
-            TranslationCrystal translationMask)
-        {
-            switch (name)
-            {
-                case "Enabled":
-                    try
-                    {
-                        errorMask?.PushIndex((int)ModSettings_FieldIndex.Enabled);
-                        if (BooleanXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Boolean EnabledParse,
-                            errorMask: errorMask))
-                        {
-                            item.Enabled = EnabledParse;
-                        }
-                        else
-                        {
-                            item.Enabled = default(Boolean);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "LowTierReductionLine":
-                    try
-                    {
-                        errorMask?.PushIndex((int)ModSettings_FieldIndex.LowTierReductionLine);
-                        if (ByteXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Byte LowTierReductionLineParse,
-                            errorMask: errorMask))
-                        {
-                            item.LowTierReductionLine = LowTierReductionLineParse;
-                        }
-                        else
-                        {
-                            item.LowTierReductionLine = default(Byte);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "LowTierCutLine":
-                    try
-                    {
-                        errorMask?.PushIndex((int)ModSettings_FieldIndex.LowTierCutLine);
-                        if (ByteXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Byte LowTierCutLineParse,
-                            errorMask: errorMask))
-                        {
-                            item.LowTierCutLine = LowTierCutLineParse;
-                        }
-                        else
-                        {
-                            item.LowTierCutLine = default(Byte);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "HighTierReductionLine":
-                    try
-                    {
-                        errorMask?.PushIndex((int)ModSettings_FieldIndex.HighTierReductionLine);
-                        if (ByteXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Byte HighTierReductionLineParse,
-                            errorMask: errorMask))
-                        {
-                            item.HighTierReductionLine = HighTierReductionLineParse;
-                        }
-                        else
-                        {
-                            item.HighTierReductionLine = default(Byte);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "HighTierCutLine":
-                    try
-                    {
-                        errorMask?.PushIndex((int)ModSettings_FieldIndex.HighTierCutLine);
-                        if (ByteXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Byte HighTierCutLineParse,
-                            errorMask: errorMask))
-                        {
-                            item.HighTierCutLine = HighTierCutLineParse;
-                        }
-                        else
-                        {
-                            item.HighTierCutLine = default(Byte);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "EpicSpawnsEnabled":
-                    try
-                    {
-                        errorMask?.PushIndex((int)ModSettings_FieldIndex.EpicSpawnsEnabled);
-                        if (BooleanXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Boolean EpicSpawnsEnabledParse,
-                            errorMask: errorMask))
-                        {
-                            item.EpicSpawnsEnabled = EpicSpawnsEnabledParse;
-                        }
-                        else
-                        {
-                            item.EpicSpawnsEnabled = default(Boolean);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "EpicTierSoftCutLine":
-                    try
-                    {
-                        errorMask?.PushIndex((int)ModSettings_FieldIndex.EpicTierSoftCutLine);
-                        if (ByteXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Byte EpicTierSoftCutLineParse,
-                            errorMask: errorMask))
-                        {
-                            item.EpicTierSoftCutLine = EpicTierSoftCutLineParse;
-                        }
-                        else
-                        {
-                            item.EpicTierSoftCutLine = default(Byte);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "EpicTierCutLine":
-                    try
-                    {
-                        errorMask?.PushIndex((int)ModSettings_FieldIndex.EpicTierCutLine);
-                        if (ByteXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Byte EpicTierCutLineParse,
-                            errorMask: errorMask))
-                        {
-                            item.EpicTierCutLine = EpicTierCutLineParse;
-                        }
-                        else
-                        {
-                            item.EpicTierCutLine = default(Byte);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "EpicTierPercentChance":
-                    try
-                    {
-                        errorMask?.PushIndex((int)ModSettings_FieldIndex.EpicTierPercentChance);
-                        if (PercentXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Percent EpicTierPercentChanceParse,
-                            errorMask: errorMask))
-                        {
-                            item.EpicTierPercentChance = EpicTierPercentChanceParse;
-                        }
-                        else
-                        {
-                            item.EpicTierPercentChance = default(Percent);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "ForceTrueLevels":
-                    try
-                    {
-                        errorMask?.PushIndex((int)ModSettings_FieldIndex.ForceTrueLevels);
-                        if (BooleanXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Boolean ForceTrueLevelsParse,
-                            errorMask: errorMask))
-                        {
-                            item.ForceTrueLevels = ForceTrueLevelsParse;
-                        }
-                        else
-                        {
-                            item.ForceTrueLevels = default(Boolean);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "ReviveDeadLLists":
-                    try
-                    {
-                        errorMask?.PushIndex((int)ModSettings_FieldIndex.ReviveDeadLLists);
-                        if (BooleanXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Boolean ReviveDeadLListsParse,
-                            errorMask: errorMask))
-                        {
-                            item.ReviveDeadLLists = ReviveDeadLListsParse;
-                        }
-                        else
-                        {
-                            item.ReviveDeadLLists = default(Boolean);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "Debug":
-                    try
-                    {
-                        errorMask?.PushIndex((int)ModSettings_FieldIndex.Debug);
-                        if (LoquiXmlTranslation<DebugSettings>.Instance.Parse(
-                            root: root,
-                            item: out DebugSettings DebugParse,
-                            errorMask: errorMask,
-                            translationMask: translationMask?.GetSubCrystal((int)ModSettings_FieldIndex.Debug)))
-                        {
-                            item.Debug = DebugParse;
-                        }
-                        else
-                        {
-                            item.Debug = default(DebugSettings);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "Count":
-                    try
-                    {
-                        errorMask?.PushIndex((int)ModSettings_FieldIndex.Count);
-                        if (LoquiXmlTranslation<CountSettings>.Instance.Parse(
-                            root: root,
-                            item: out CountSettings CountParse,
-                            errorMask: errorMask,
-                            translationMask: translationMask?.GetSubCrystal((int)ModSettings_FieldIndex.Count)))
-                        {
-                            item.Count = CountParse;
-                        }
-                        else
-                        {
-                            item.Count = default(CountSettings);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "Performance":
-                    try
-                    {
-                        errorMask?.PushIndex((int)ModSettings_FieldIndex.Performance);
-                        if (LoquiXmlTranslation<SpawningPerformance>.Instance.Parse(
-                            root: root,
-                            item: out SpawningPerformance PerformanceParse,
-                            errorMask: errorMask,
-                            translationMask: translationMask?.GetSubCrystal((int)ModSettings_FieldIndex.Performance)))
-                        {
-                            item.Performance = PerformanceParse;
-                        }
-                        else
-                        {
-                            item.Performance = default(SpawningPerformance);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
 
         #endregion
 
@@ -1053,32 +700,27 @@ namespace DynamicLeveledLists
             return ret;
         }
 
-        public void CopyFieldsFrom(
-            IModSettingsGetter rhs,
-            NotifyingFireParameters cmds = null)
+        public void CopyFieldsFrom(IModSettingsGetter rhs)
         {
             this.CopyFieldsFrom(
                 rhs: (IModSettingsGetter)rhs,
                 def: null,
                 doMasks: false,
                 errorMask: out var errMask,
-                copyMask: null,
-                cmds: cmds);
+                copyMask: null);
         }
 
         public void CopyFieldsFrom(
             IModSettingsGetter rhs,
             ModSettings_CopyMask copyMask,
-            IModSettingsGetter def = null,
-            NotifyingFireParameters cmds = null)
+            IModSettingsGetter def = null)
         {
             this.CopyFieldsFrom(
                 rhs: rhs,
                 def: def,
                 doMasks: false,
                 errorMask: out var errMask,
-                copyMask: copyMask,
-                cmds: cmds);
+                copyMask: copyMask);
         }
 
         public void CopyFieldsFrom(
@@ -1086,7 +728,6 @@ namespace DynamicLeveledLists
             out ModSettings_ErrorMask errorMask,
             ModSettings_CopyMask copyMask = null,
             IModSettingsGetter def = null,
-            NotifyingFireParameters cmds = null,
             bool doMasks = true)
         {
             var errorMaskBuilder = new ErrorMaskBuilder();
@@ -1095,8 +736,7 @@ namespace DynamicLeveledLists
                 rhs: rhs,
                 def: def,
                 errorMask: errorMaskBuilder,
-                copyMask: copyMask,
-                cmds: cmds);
+                copyMask: copyMask);
             errorMask = ModSettings_ErrorMask.Factory(errorMaskBuilder);
         }
 
@@ -1105,7 +745,6 @@ namespace DynamicLeveledLists
             ErrorMaskBuilder errorMask,
             ModSettings_CopyMask copyMask = null,
             IModSettingsGetter def = null,
-            NotifyingFireParameters cmds = null,
             bool doMasks = true)
         {
             ModSettingsCommon.CopyFieldsFrom(
@@ -1113,12 +752,10 @@ namespace DynamicLeveledLists
                 rhs: rhs,
                 def: def,
                 errorMask: errorMask,
-                copyMask: copyMask,
-                cmds: cmds);
+                copyMask: copyMask);
         }
 
-        void ILoquiObjectSetter.SetNthObject(ushort index, object obj, NotifyingFireParameters cmds) => this.SetNthObject(index, obj, cmds);
-        protected void SetNthObject(ushort index, object obj, NotifyingFireParameters cmds = null)
+        protected void SetNthObject(ushort index, object obj)
         {
             ModSettings_FieldIndex enu = (ModSettings_FieldIndex)index;
             switch (enu)
@@ -1170,17 +807,17 @@ namespace DynamicLeveledLists
             }
         }
 
-        partial void ClearPartial(NotifyingUnsetParameters cmds);
+        partial void ClearPartial();
 
-        protected void CallClearPartial_Internal(NotifyingUnsetParameters cmds)
+        protected void CallClearPartial_Internal()
         {
-            ClearPartial(cmds);
+            ClearPartial();
         }
 
-        public void Clear(NotifyingUnsetParameters cmds = null)
+        public void Clear()
         {
-            CallClearPartial_Internal(cmds);
-            ModSettingsCommon.Clear(this, cmds);
+            CallClearPartial_Internal();
+            ModSettingsCommon.Clear(this);
         }
 
 
@@ -1248,11 +885,6 @@ namespace DynamicLeveledLists
                     throw new ArgumentException($"Unknown enum type: {enu}");
             }
         }
-        public static void CopyIn(IEnumerable<KeyValuePair<ushort, object>> fields, ModSettings obj)
-        {
-            ILoquiObjectExt.CopyFieldsIn(obj, fields, def: null, skipProtected: false, cmds: null);
-        }
-
     }
     #endregion
 
@@ -1694,8 +1326,7 @@ namespace DynamicLeveledLists.Internals
             IModSettingsGetter rhs,
             IModSettingsGetter def,
             ErrorMaskBuilder errorMask,
-            ModSettings_CopyMask copyMask,
-            NotifyingFireParameters cmds = null)
+            ModSettings_CopyMask copyMask)
         {
             if (copyMask?.Enabled ?? true)
             {
@@ -1900,8 +1531,7 @@ namespace DynamicLeveledLists.Internals
                                 rhs: rhs.Debug,
                                 def: def?.Debug,
                                 errorMask: errorMask,
-                                copyMask: copyMask?.Debug.Specific,
-                                cmds: cmds);
+                                copyMask: copyMask?.Debug.Specific);
                             break;
                         case CopyOption.MakeCopy:
                             if (rhs.Debug == null)
@@ -1946,8 +1576,7 @@ namespace DynamicLeveledLists.Internals
                                 rhs: rhs.Count,
                                 def: def?.Count,
                                 errorMask: errorMask,
-                                copyMask: copyMask?.Count.Specific,
-                                cmds: cmds);
+                                copyMask: copyMask?.Count.Specific);
                             break;
                         case CopyOption.MakeCopy:
                             if (rhs.Count == null)
@@ -1992,8 +1621,7 @@ namespace DynamicLeveledLists.Internals
                                 rhs: rhs.Performance,
                                 def: def?.Performance,
                                 errorMask: errorMask,
-                                copyMask: copyMask?.Performance.Specific,
-                                cmds: cmds);
+                                copyMask: copyMask?.Performance.Specific);
                             break;
                         case CopyOption.MakeCopy:
                             if (rhs.Performance == null)
@@ -2026,161 +1654,7 @@ namespace DynamicLeveledLists.Internals
 
         #endregion
 
-        public static void SetNthObjectHasBeenSet(
-            ushort index,
-            bool on,
-            IModSettings obj,
-            NotifyingFireParameters cmds = null)
-        {
-            ModSettings_FieldIndex enu = (ModSettings_FieldIndex)index;
-            switch (enu)
-            {
-                case ModSettings_FieldIndex.Enabled:
-                case ModSettings_FieldIndex.LowTierReductionLine:
-                case ModSettings_FieldIndex.LowTierCutLine:
-                case ModSettings_FieldIndex.HighTierReductionLine:
-                case ModSettings_FieldIndex.HighTierCutLine:
-                case ModSettings_FieldIndex.EpicSpawnsEnabled:
-                case ModSettings_FieldIndex.EpicTierSoftCutLine:
-                case ModSettings_FieldIndex.EpicTierCutLine:
-                case ModSettings_FieldIndex.EpicTierPercentChance:
-                case ModSettings_FieldIndex.ForceTrueLevels:
-                case ModSettings_FieldIndex.ReviveDeadLLists:
-                case ModSettings_FieldIndex.Debug:
-                case ModSettings_FieldIndex.Count:
-                case ModSettings_FieldIndex.Performance:
-                    if (on) break;
-                    throw new ArgumentException("Tried to unset a field which does not have this functionality." + index);
-                default:
-                    throw new ArgumentException($"Index is out of range: {index}");
-            }
-        }
-
-        public static void UnsetNthObject(
-            ushort index,
-            IModSettings obj,
-            NotifyingUnsetParameters cmds = null)
-        {
-            ModSettings_FieldIndex enu = (ModSettings_FieldIndex)index;
-            switch (enu)
-            {
-                case ModSettings_FieldIndex.Enabled:
-                    obj.Enabled = default(Boolean);
-                    break;
-                case ModSettings_FieldIndex.LowTierReductionLine:
-                    obj.LowTierReductionLine = default(Byte);
-                    break;
-                case ModSettings_FieldIndex.LowTierCutLine:
-                    obj.LowTierCutLine = default(Byte);
-                    break;
-                case ModSettings_FieldIndex.HighTierReductionLine:
-                    obj.HighTierReductionLine = default(Byte);
-                    break;
-                case ModSettings_FieldIndex.HighTierCutLine:
-                    obj.HighTierCutLine = default(Byte);
-                    break;
-                case ModSettings_FieldIndex.EpicSpawnsEnabled:
-                    obj.EpicSpawnsEnabled = default(Boolean);
-                    break;
-                case ModSettings_FieldIndex.EpicTierSoftCutLine:
-                    obj.EpicTierSoftCutLine = default(Byte);
-                    break;
-                case ModSettings_FieldIndex.EpicTierCutLine:
-                    obj.EpicTierCutLine = default(Byte);
-                    break;
-                case ModSettings_FieldIndex.EpicTierPercentChance:
-                    obj.EpicTierPercentChance = default(Percent);
-                    break;
-                case ModSettings_FieldIndex.ForceTrueLevels:
-                    obj.ForceTrueLevels = default(Boolean);
-                    break;
-                case ModSettings_FieldIndex.ReviveDeadLLists:
-                    obj.ReviveDeadLLists = default(Boolean);
-                    break;
-                case ModSettings_FieldIndex.Debug:
-                    obj.Debug = default(DebugSettings);
-                    break;
-                case ModSettings_FieldIndex.Count:
-                    obj.Count = default(CountSettings);
-                    break;
-                case ModSettings_FieldIndex.Performance:
-                    obj.Performance = default(SpawningPerformance);
-                    break;
-                default:
-                    throw new ArgumentException($"Index is out of range: {index}");
-            }
-        }
-
-        public static bool GetNthObjectHasBeenSet(
-            ushort index,
-            IModSettings obj)
-        {
-            ModSettings_FieldIndex enu = (ModSettings_FieldIndex)index;
-            switch (enu)
-            {
-                case ModSettings_FieldIndex.Enabled:
-                case ModSettings_FieldIndex.LowTierReductionLine:
-                case ModSettings_FieldIndex.LowTierCutLine:
-                case ModSettings_FieldIndex.HighTierReductionLine:
-                case ModSettings_FieldIndex.HighTierCutLine:
-                case ModSettings_FieldIndex.EpicSpawnsEnabled:
-                case ModSettings_FieldIndex.EpicTierSoftCutLine:
-                case ModSettings_FieldIndex.EpicTierCutLine:
-                case ModSettings_FieldIndex.EpicTierPercentChance:
-                case ModSettings_FieldIndex.ForceTrueLevels:
-                case ModSettings_FieldIndex.ReviveDeadLLists:
-                case ModSettings_FieldIndex.Debug:
-                case ModSettings_FieldIndex.Count:
-                case ModSettings_FieldIndex.Performance:
-                    return true;
-                default:
-                    throw new ArgumentException($"Index is out of range: {index}");
-            }
-        }
-
-        public static object GetNthObject(
-            ushort index,
-            IModSettingsGetter obj)
-        {
-            ModSettings_FieldIndex enu = (ModSettings_FieldIndex)index;
-            switch (enu)
-            {
-                case ModSettings_FieldIndex.Enabled:
-                    return obj.Enabled;
-                case ModSettings_FieldIndex.LowTierReductionLine:
-                    return obj.LowTierReductionLine;
-                case ModSettings_FieldIndex.LowTierCutLine:
-                    return obj.LowTierCutLine;
-                case ModSettings_FieldIndex.HighTierReductionLine:
-                    return obj.HighTierReductionLine;
-                case ModSettings_FieldIndex.HighTierCutLine:
-                    return obj.HighTierCutLine;
-                case ModSettings_FieldIndex.EpicSpawnsEnabled:
-                    return obj.EpicSpawnsEnabled;
-                case ModSettings_FieldIndex.EpicTierSoftCutLine:
-                    return obj.EpicTierSoftCutLine;
-                case ModSettings_FieldIndex.EpicTierCutLine:
-                    return obj.EpicTierCutLine;
-                case ModSettings_FieldIndex.EpicTierPercentChance:
-                    return obj.EpicTierPercentChance;
-                case ModSettings_FieldIndex.ForceTrueLevels:
-                    return obj.ForceTrueLevels;
-                case ModSettings_FieldIndex.ReviveDeadLLists:
-                    return obj.ReviveDeadLLists;
-                case ModSettings_FieldIndex.Debug:
-                    return obj.Debug;
-                case ModSettings_FieldIndex.Count:
-                    return obj.Count;
-                case ModSettings_FieldIndex.Performance:
-                    return obj.Performance;
-                default:
-                    throw new ArgumentException($"Index is out of range: {index}");
-            }
-        }
-
-        public static void Clear(
-            IModSettings item,
-            NotifyingUnsetParameters cmds = null)
+        public static void Clear(IModSettings item)
         {
             item.Enabled = default(Boolean);
             item.LowTierReductionLine = default(Byte);
@@ -2200,17 +1674,23 @@ namespace DynamicLeveledLists.Internals
 
         public static ModSettings_Mask<bool> GetEqualsMask(
             this IModSettingsGetter item,
-            IModSettingsGetter rhs)
+            IModSettingsGetter rhs,
+            EqualsMaskHelper.Include include = EqualsMaskHelper.Include.All)
         {
             var ret = new ModSettings_Mask<bool>();
-            FillEqualsMask(item, rhs, ret);
+            FillEqualsMask(
+                item: item,
+                rhs: rhs,
+                ret: ret,
+                include: include);
             return ret;
         }
 
         public static void FillEqualsMask(
             IModSettingsGetter item,
             IModSettingsGetter rhs,
-            ModSettings_Mask<bool> ret)
+            ModSettings_Mask<bool> ret,
+            EqualsMaskHelper.Include include = EqualsMaskHelper.Include.All)
         {
             if (rhs == null) return;
             ret.Enabled = item.Enabled == rhs.Enabled;
@@ -2221,18 +1701,12 @@ namespace DynamicLeveledLists.Internals
             ret.EpicSpawnsEnabled = item.EpicSpawnsEnabled == rhs.EpicSpawnsEnabled;
             ret.EpicTierSoftCutLine = item.EpicTierSoftCutLine == rhs.EpicTierSoftCutLine;
             ret.EpicTierCutLine = item.EpicTierCutLine == rhs.EpicTierCutLine;
-            ret.EpicTierPercentChance = item.EpicTierPercentChance == rhs.EpicTierPercentChance;
+            ret.EpicTierPercentChance = item.EpicTierPercentChance.Equals(rhs.EpicTierPercentChance);
             ret.ForceTrueLevels = item.ForceTrueLevels == rhs.ForceTrueLevels;
             ret.ReviveDeadLLists = item.ReviveDeadLLists == rhs.ReviveDeadLLists;
-            ret.Debug = new MaskItem<bool, DebugSettings_Mask<bool>>();
-            ret.Debug.Specific = DebugSettingsCommon.GetEqualsMask(item.Debug, rhs.Debug);
-            ret.Debug.Overall = ret.Debug.Specific.AllEqual((b) => b);
-            ret.Count = new MaskItem<bool, CountSettings_Mask<bool>>();
-            ret.Count.Specific = CountSettingsCommon.GetEqualsMask(item.Count, rhs.Count);
-            ret.Count.Overall = ret.Count.Specific.AllEqual((b) => b);
-            ret.Performance = new MaskItem<bool, SpawningPerformance_Mask<bool>>();
-            ret.Performance.Specific = SpawningPerformanceCommon.GetEqualsMask(item.Performance, rhs.Performance);
-            ret.Performance.Overall = ret.Performance.Specific.AllEqual((b) => b);
+            ret.Debug = MaskItemExt.Factory(DebugSettingsCommon.GetEqualsMask(item.Debug, rhs.Debug, include), include);
+            ret.Count = MaskItemExt.Factory(CountSettingsCommon.GetEqualsMask(item.Count, rhs.Count, include), include);
+            ret.Performance = MaskItemExt.Factory(SpawningPerformanceCommon.GetEqualsMask(item.Performance, rhs.Performance, include), include);
         }
 
         public static string ToString(
@@ -2361,8 +1835,8 @@ namespace DynamicLeveledLists.Internals
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
             Write_Xml(
-                node: node,
                 name: name,
+                node: node,
                 item: item,
                 errorMask: errorMaskBuilder,
                 translationMask: translationMask?.GetCrystal());
@@ -2382,10 +1856,24 @@ namespace DynamicLeveledLists.Internals
             {
                 elem.SetAttributeValue("type", "DynamicLeveledLists.ModSettings");
             }
+            WriteToNode_Xml(
+                item: item,
+                node: elem,
+                errorMask: errorMask,
+                translationMask: translationMask);
+        }
+        #endregion
+
+        public static void WriteToNode_Xml(
+            this ModSettings item,
+            XElement node,
+            ErrorMaskBuilder errorMask,
+            TranslationCrystal translationMask)
+        {
             if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.Enabled) ?? true))
             {
                 BooleanXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.Enabled),
                     item: item.Enabled,
                     fieldIndex: (int)ModSettings_FieldIndex.Enabled,
@@ -2394,7 +1882,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.LowTierReductionLine) ?? true))
             {
                 ByteXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.LowTierReductionLine),
                     item: item.LowTierReductionLine,
                     fieldIndex: (int)ModSettings_FieldIndex.LowTierReductionLine,
@@ -2403,7 +1891,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.LowTierCutLine) ?? true))
             {
                 ByteXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.LowTierCutLine),
                     item: item.LowTierCutLine,
                     fieldIndex: (int)ModSettings_FieldIndex.LowTierCutLine,
@@ -2412,7 +1900,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.HighTierReductionLine) ?? true))
             {
                 ByteXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.HighTierReductionLine),
                     item: item.HighTierReductionLine,
                     fieldIndex: (int)ModSettings_FieldIndex.HighTierReductionLine,
@@ -2421,7 +1909,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.HighTierCutLine) ?? true))
             {
                 ByteXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.HighTierCutLine),
                     item: item.HighTierCutLine,
                     fieldIndex: (int)ModSettings_FieldIndex.HighTierCutLine,
@@ -2430,7 +1918,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.EpicSpawnsEnabled) ?? true))
             {
                 BooleanXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.EpicSpawnsEnabled),
                     item: item.EpicSpawnsEnabled,
                     fieldIndex: (int)ModSettings_FieldIndex.EpicSpawnsEnabled,
@@ -2439,7 +1927,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.EpicTierSoftCutLine) ?? true))
             {
                 ByteXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.EpicTierSoftCutLine),
                     item: item.EpicTierSoftCutLine,
                     fieldIndex: (int)ModSettings_FieldIndex.EpicTierSoftCutLine,
@@ -2448,7 +1936,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.EpicTierCutLine) ?? true))
             {
                 ByteXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.EpicTierCutLine),
                     item: item.EpicTierCutLine,
                     fieldIndex: (int)ModSettings_FieldIndex.EpicTierCutLine,
@@ -2457,7 +1945,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.EpicTierPercentChance) ?? true))
             {
                 PercentXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.EpicTierPercentChance),
                     item: item.EpicTierPercentChance,
                     fieldIndex: (int)ModSettings_FieldIndex.EpicTierPercentChance,
@@ -2466,7 +1954,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.ForceTrueLevels) ?? true))
             {
                 BooleanXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.ForceTrueLevels),
                     item: item.ForceTrueLevels,
                     fieldIndex: (int)ModSettings_FieldIndex.ForceTrueLevels,
@@ -2475,7 +1963,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.ReviveDeadLLists) ?? true))
             {
                 BooleanXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.ReviveDeadLLists),
                     item: item.ReviveDeadLLists,
                     fieldIndex: (int)ModSettings_FieldIndex.ReviveDeadLLists,
@@ -2484,7 +1972,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.Debug) ?? true))
             {
                 LoquiXmlTranslation<DebugSettings>.Instance.Write(
-                    node: elem,
+                    node: node,
                     item: item.Debug,
                     name: nameof(item.Debug),
                     fieldIndex: (int)ModSettings_FieldIndex.Debug,
@@ -2494,7 +1982,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.Count) ?? true))
             {
                 LoquiXmlTranslation<CountSettings>.Instance.Write(
-                    node: elem,
+                    node: node,
                     item: item.Count,
                     name: nameof(item.Count),
                     fieldIndex: (int)ModSettings_FieldIndex.Count,
@@ -2504,7 +1992,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.Performance) ?? true))
             {
                 LoquiXmlTranslation<SpawningPerformance>.Instance.Write(
-                    node: elem,
+                    node: node,
                     item: item.Performance,
                     name: nameof(item.Performance),
                     fieldIndex: (int)ModSettings_FieldIndex.Performance,
@@ -2512,7 +2000,454 @@ namespace DynamicLeveledLists.Internals
                     translationMask: translationMask?.GetSubCrystal((int)ModSettings_FieldIndex.Performance));
             }
         }
-        #endregion
+
+        public static void FillPublic_Xml(
+            this ModSettings item,
+            XElement node,
+            ErrorMaskBuilder errorMask,
+            TranslationCrystal translationMask)
+        {
+            try
+            {
+                foreach (var elem in node.Elements())
+                {
+                    ModSettingsCommon.FillPublicElement_Xml(
+                        item: item,
+                        node: elem,
+                        name: elem.Name.LocalName,
+                        errorMask: errorMask,
+                        translationMask: translationMask);
+                }
+            }
+            catch (Exception ex)
+            when (errorMask != null)
+            {
+                errorMask.ReportException(ex);
+            }
+        }
+
+        public static void FillPublicElement_Xml(
+            this ModSettings item,
+            XElement node,
+            string name,
+            ErrorMaskBuilder errorMask,
+            TranslationCrystal translationMask)
+        {
+            switch (name)
+            {
+                case "Enabled":
+                    if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.Enabled) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)ModSettings_FieldIndex.Enabled);
+                            if (BooleanXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Boolean EnabledParse,
+                                errorMask: errorMask))
+                            {
+                                item.Enabled = EnabledParse;
+                            }
+                            else
+                            {
+                                item.Enabled = default(Boolean);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "LowTierReductionLine":
+                    if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.LowTierReductionLine) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)ModSettings_FieldIndex.LowTierReductionLine);
+                            if (ByteXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Byte LowTierReductionLineParse,
+                                errorMask: errorMask))
+                            {
+                                item.LowTierReductionLine = LowTierReductionLineParse;
+                            }
+                            else
+                            {
+                                item.LowTierReductionLine = default(Byte);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "LowTierCutLine":
+                    if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.LowTierCutLine) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)ModSettings_FieldIndex.LowTierCutLine);
+                            if (ByteXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Byte LowTierCutLineParse,
+                                errorMask: errorMask))
+                            {
+                                item.LowTierCutLine = LowTierCutLineParse;
+                            }
+                            else
+                            {
+                                item.LowTierCutLine = default(Byte);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "HighTierReductionLine":
+                    if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.HighTierReductionLine) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)ModSettings_FieldIndex.HighTierReductionLine);
+                            if (ByteXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Byte HighTierReductionLineParse,
+                                errorMask: errorMask))
+                            {
+                                item.HighTierReductionLine = HighTierReductionLineParse;
+                            }
+                            else
+                            {
+                                item.HighTierReductionLine = default(Byte);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "HighTierCutLine":
+                    if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.HighTierCutLine) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)ModSettings_FieldIndex.HighTierCutLine);
+                            if (ByteXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Byte HighTierCutLineParse,
+                                errorMask: errorMask))
+                            {
+                                item.HighTierCutLine = HighTierCutLineParse;
+                            }
+                            else
+                            {
+                                item.HighTierCutLine = default(Byte);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "EpicSpawnsEnabled":
+                    if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.EpicSpawnsEnabled) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)ModSettings_FieldIndex.EpicSpawnsEnabled);
+                            if (BooleanXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Boolean EpicSpawnsEnabledParse,
+                                errorMask: errorMask))
+                            {
+                                item.EpicSpawnsEnabled = EpicSpawnsEnabledParse;
+                            }
+                            else
+                            {
+                                item.EpicSpawnsEnabled = default(Boolean);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "EpicTierSoftCutLine":
+                    if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.EpicTierSoftCutLine) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)ModSettings_FieldIndex.EpicTierSoftCutLine);
+                            if (ByteXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Byte EpicTierSoftCutLineParse,
+                                errorMask: errorMask))
+                            {
+                                item.EpicTierSoftCutLine = EpicTierSoftCutLineParse;
+                            }
+                            else
+                            {
+                                item.EpicTierSoftCutLine = default(Byte);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "EpicTierCutLine":
+                    if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.EpicTierCutLine) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)ModSettings_FieldIndex.EpicTierCutLine);
+                            if (ByteXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Byte EpicTierCutLineParse,
+                                errorMask: errorMask))
+                            {
+                                item.EpicTierCutLine = EpicTierCutLineParse;
+                            }
+                            else
+                            {
+                                item.EpicTierCutLine = default(Byte);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "EpicTierPercentChance":
+                    if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.EpicTierPercentChance) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)ModSettings_FieldIndex.EpicTierPercentChance);
+                            if (PercentXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Percent EpicTierPercentChanceParse,
+                                errorMask: errorMask))
+                            {
+                                item.EpicTierPercentChance = EpicTierPercentChanceParse;
+                            }
+                            else
+                            {
+                                item.EpicTierPercentChance = default(Percent);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "ForceTrueLevels":
+                    if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.ForceTrueLevels) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)ModSettings_FieldIndex.ForceTrueLevels);
+                            if (BooleanXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Boolean ForceTrueLevelsParse,
+                                errorMask: errorMask))
+                            {
+                                item.ForceTrueLevels = ForceTrueLevelsParse;
+                            }
+                            else
+                            {
+                                item.ForceTrueLevels = default(Boolean);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "ReviveDeadLLists":
+                    if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.ReviveDeadLLists) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)ModSettings_FieldIndex.ReviveDeadLLists);
+                            if (BooleanXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Boolean ReviveDeadLListsParse,
+                                errorMask: errorMask))
+                            {
+                                item.ReviveDeadLLists = ReviveDeadLListsParse;
+                            }
+                            else
+                            {
+                                item.ReviveDeadLLists = default(Boolean);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "Debug":
+                    if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.Debug) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)ModSettings_FieldIndex.Debug);
+                            if (LoquiXmlTranslation<DebugSettings>.Instance.Parse(
+                                node: node,
+                                item: out DebugSettings DebugParse,
+                                errorMask: errorMask,
+                                translationMask: translationMask?.GetSubCrystal((int)ModSettings_FieldIndex.Debug)))
+                            {
+                                item.Debug = DebugParse;
+                            }
+                            else
+                            {
+                                item.Debug = default(DebugSettings);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "Count":
+                    if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.Count) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)ModSettings_FieldIndex.Count);
+                            if (LoquiXmlTranslation<CountSettings>.Instance.Parse(
+                                node: node,
+                                item: out CountSettings CountParse,
+                                errorMask: errorMask,
+                                translationMask: translationMask?.GetSubCrystal((int)ModSettings_FieldIndex.Count)))
+                            {
+                                item.Count = CountParse;
+                            }
+                            else
+                            {
+                                item.Count = default(CountSettings);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "Performance":
+                    if ((translationMask?.GetShouldTranslate((int)ModSettings_FieldIndex.Performance) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)ModSettings_FieldIndex.Performance);
+                            if (LoquiXmlTranslation<SpawningPerformance>.Instance.Parse(
+                                node: node,
+                                item: out SpawningPerformance PerformanceParse,
+                                errorMask: errorMask,
+                                translationMask: translationMask?.GetSubCrystal((int)ModSettings_FieldIndex.Performance)))
+                            {
+                                item.Performance = PerformanceParse;
+                            }
+                            else
+                            {
+                                item.Performance = default(SpawningPerformance);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
 
         #endregion
 

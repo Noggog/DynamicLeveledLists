@@ -78,30 +78,8 @@ namespace DynamicLeveledLists
         }
         #endregion
 
-        #region Loqui Getter Interface
-
-        protected object GetNthObject(ushort index) => SpawningPerformanceCommon.GetNthObject(index, this);
-        object ILoquiObjectGetter.GetNthObject(ushort index) => this.GetNthObject(index);
-
-        protected bool GetNthObjectHasBeenSet(ushort index) => SpawningPerformanceCommon.GetNthObjectHasBeenSet(index, this);
-        bool ILoquiObjectGetter.GetNthObjectHasBeenSet(ushort index) => this.GetNthObjectHasBeenSet(index);
-
-        protected void UnsetNthObject(ushort index, NotifyingUnsetParameters cmds) => SpawningPerformanceCommon.UnsetNthObject(index, this, cmds);
-        void ILoquiObjectSetter.UnsetNthObject(ushort index, NotifyingUnsetParameters cmds) => this.UnsetNthObject(index, cmds);
-
-        #endregion
-
-        #region Loqui Interface
-        protected void SetNthObjectHasBeenSet(ushort index, bool on)
-        {
-            SpawningPerformanceCommon.SetNthObjectHasBeenSet(index, on, this);
-        }
-        void ILoquiObjectSetter.SetNthObjectHasBeenSet(ushort index, bool on) => this.SetNthObjectHasBeenSet(index, on);
-
-        #endregion
-
-        IMask<bool> IEqualsMask<SpawningPerformance>.GetEqualsMask(SpawningPerformance rhs) => SpawningPerformanceCommon.GetEqualsMask(this, rhs);
-        IMask<bool> IEqualsMask<ISpawningPerformanceGetter>.GetEqualsMask(ISpawningPerformanceGetter rhs) => SpawningPerformanceCommon.GetEqualsMask(this, rhs);
+        IMask<bool> IEqualsMask<SpawningPerformance>.GetEqualsMask(SpawningPerformance rhs, EqualsMaskHelper.Include include) => SpawningPerformanceCommon.GetEqualsMask(this, rhs, include);
+        IMask<bool> IEqualsMask<ISpawningPerformanceGetter>.GetEqualsMask(ISpawningPerformanceGetter rhs, EqualsMaskHelper.Include include) => SpawningPerformanceCommon.GetEqualsMask(this, rhs, include);
         #region To String
         public override string ToString()
         {
@@ -163,25 +141,29 @@ namespace DynamicLeveledLists
         #region Xml Create
         [DebuggerStepThrough]
         public static SpawningPerformance Create_Xml(
-            XElement root,
+            XElement node,
+            MissingCreate missing = MissingCreate.New,
             SpawningPerformance_TranslationMask translationMask = null)
         {
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: null,
                 translationMask: translationMask?.GetCrystal());
         }
 
         [DebuggerStepThrough]
         public static SpawningPerformance Create_Xml(
-            XElement root,
+            XElement node,
             out SpawningPerformance_ErrorMask errorMask,
             bool doMasks = true,
-            SpawningPerformance_TranslationMask translationMask = null)
+            SpawningPerformance_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
             var ret = Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: errorMaskBuilder,
                 translationMask: translationMask.GetCrystal());
             errorMask = SpawningPerformance_ErrorMask.Factory(errorMaskBuilder);
@@ -189,18 +171,28 @@ namespace DynamicLeveledLists
         }
 
         public static SpawningPerformance Create_Xml(
-            XElement root,
+            XElement node,
             ErrorMaskBuilder errorMask,
-            TranslationCrystal translationMask)
+            TranslationCrystal translationMask,
+            MissingCreate missing = MissingCreate.New)
         {
+            switch (missing)
+            {
+                case MissingCreate.New:
+                case MissingCreate.Null:
+                    if (node == null) return missing == MissingCreate.New ? new SpawningPerformance() : null;
+                    break;
+                default:
+                    break;
+            }
             var ret = new SpawningPerformance();
             try
             {
-                foreach (var elem in root.Elements())
+                foreach (var elem in node.Elements())
                 {
-                    Fill_Xml_Internal(
+                    SpawningPerformanceCommon.FillPublicElement_Xml(
                         item: ret,
-                        root: elem,
+                        node: elem,
                         name: elem.Name.LocalName,
                         errorMask: errorMask,
                         translationMask: translationMask);
@@ -216,142 +208,178 @@ namespace DynamicLeveledLists
 
         public static SpawningPerformance Create_Xml(
             string path,
+            MissingCreate missing = MissingCreate.New,
             SpawningPerformance_TranslationMask translationMask = null)
         {
-            var root = XDocument.Load(path).Root;
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 translationMask: translationMask);
         }
 
         public static SpawningPerformance Create_Xml(
             string path,
             out SpawningPerformance_ErrorMask errorMask,
-            SpawningPerformance_TranslationMask translationMask = null)
+            SpawningPerformance_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
         {
-            var root = XDocument.Load(path).Root;
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: out errorMask,
                 translationMask: translationMask);
         }
 
         public static SpawningPerformance Create_Xml(
+            string path,
+            ErrorMaskBuilder errorMask,
+            SpawningPerformance_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
+        {
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
+            return Create_Xml(
+                missing: missing,
+                node: node,
+                errorMask: errorMask,
+                translationMask: translationMask?.GetCrystal());
+        }
+
+        public static SpawningPerformance Create_Xml(
             Stream stream,
+            MissingCreate missing = MissingCreate.New,
             SpawningPerformance_TranslationMask translationMask = null)
         {
-            var root = XDocument.Load(stream).Root;
+            var node = XDocument.Load(stream).Root;
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 translationMask: translationMask);
         }
 
         public static SpawningPerformance Create_Xml(
             Stream stream,
             out SpawningPerformance_ErrorMask errorMask,
-            SpawningPerformance_TranslationMask translationMask = null)
+            SpawningPerformance_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
         {
-            var root = XDocument.Load(stream).Root;
+            var node = XDocument.Load(stream).Root;
             return Create_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: out errorMask,
                 translationMask: translationMask);
+        }
+
+        public static SpawningPerformance Create_Xml(
+            Stream stream,
+            ErrorMaskBuilder errorMask,
+            SpawningPerformance_TranslationMask translationMask = null,
+            MissingCreate missing = MissingCreate.New)
+        {
+            var node = XDocument.Load(stream).Root;
+            return Create_Xml(
+                missing: missing,
+                node: node,
+                errorMask: errorMask,
+                translationMask: translationMask?.GetCrystal());
         }
 
         #endregion
 
         #region Xml Copy In
         public void CopyIn_Xml(
-            XElement root,
-            NotifyingFireParameters cmds = null)
+            XElement node,
+            MissingCreate missing = MissingCreate.New)
         {
             CopyIn_Xml_Internal(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: null,
-                translationMask: null,
-                cmds: cmds);
+                translationMask: null);
         }
 
         public virtual void CopyIn_Xml(
-            XElement root,
+            XElement node,
             out SpawningPerformance_ErrorMask errorMask,
             SpawningPerformance_TranslationMask translationMask = null,
-            bool doMasks = true,
-            NotifyingFireParameters cmds = null)
+            MissingCreate missing = MissingCreate.New,
+            bool doMasks = true)
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
             CopyIn_Xml_Internal(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: errorMaskBuilder,
-                translationMask: translationMask?.GetCrystal(),
-                cmds: cmds);
+                translationMask: translationMask?.GetCrystal());
             errorMask = SpawningPerformance_ErrorMask.Factory(errorMaskBuilder);
         }
 
         protected void CopyIn_Xml_Internal(
-            XElement root,
+            XElement node,
             ErrorMaskBuilder errorMask,
             TranslationCrystal translationMask,
-            NotifyingFireParameters cmds = null)
+            MissingCreate missing = MissingCreate.New)
         {
             LoquiXmlTranslation<SpawningPerformance>.Instance.CopyIn(
-                root: root,
+                missing: missing,
+                node: node,
                 item: this,
                 skipProtected: true,
                 errorMask: errorMask,
-                translationMask: translationMask,
-                cmds: cmds);
+                translationMask: translationMask);
         }
 
         public void CopyIn_Xml(
             string path,
-            NotifyingFireParameters cmds = null)
+            MissingCreate missing = MissingCreate.New)
         {
-            var root = XDocument.Load(path).Root;
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
             this.CopyIn_Xml(
-                root: root,
-                cmds: cmds);
+                missing: missing,
+                node: node);
         }
 
         public void CopyIn_Xml(
             string path,
             out SpawningPerformance_ErrorMask errorMask,
             SpawningPerformance_TranslationMask translationMask,
-            NotifyingFireParameters cmds = null,
+            MissingCreate missing = MissingCreate.New,
             bool doMasks = true)
         {
-            var root = XDocument.Load(path).Root;
+            var node = System.IO.File.Exists(path) ? XDocument.Load(path).Root : null;
             this.CopyIn_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: out errorMask,
                 translationMask: translationMask,
-                cmds: cmds,
                 doMasks: doMasks);
         }
 
         public void CopyIn_Xml(
             Stream stream,
-            NotifyingFireParameters cmds = null)
+            MissingCreate missing = MissingCreate.New)
         {
-            var root = XDocument.Load(stream).Root;
+            var node = XDocument.Load(stream).Root;
             this.CopyIn_Xml(
-                root: root,
-                cmds: cmds);
+                missing: missing,
+                node: node);
         }
 
         public void CopyIn_Xml(
             Stream stream,
             out SpawningPerformance_ErrorMask errorMask,
             SpawningPerformance_TranslationMask translationMask,
-            NotifyingFireParameters cmds = null,
+            MissingCreate missing = MissingCreate.New,
             bool doMasks = true)
         {
-            var root = XDocument.Load(stream).Root;
+            var node = XDocument.Load(stream).Root;
             this.CopyIn_Xml(
-                root: root,
+                missing: missing,
+                node: node,
                 errorMask: out errorMask,
                 translationMask: translationMask,
-                cmds: cmds,
                 doMasks: doMasks);
         }
 
@@ -367,8 +395,8 @@ namespace DynamicLeveledLists
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
             this.Write_Xml(
-                node: node,
                 name: name,
+                node: node,
                 errorMask: errorMaskBuilder,
                 translationMask: translationMask?.GetCrystal());
             errorMask = SpawningPerformance_ErrorMask.Factory(errorMaskBuilder);
@@ -381,14 +409,14 @@ namespace DynamicLeveledLists
             bool doMasks = true,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: out errorMask,
                 doMasks: doMasks,
                 translationMask: translationMask);
-            topNode.Elements().First().SaveIfChanged(path);
+            node.Elements().First().SaveIfChanged(path);
         }
 
         public void Write_Xml(
@@ -397,13 +425,13 @@ namespace DynamicLeveledLists
             TranslationCrystal translationMask,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: errorMask,
                 translationMask: translationMask);
-            topNode.Elements().First().SaveIfChanged(path);
+            node.Elements().First().SaveIfChanged(path);
         }
         public virtual void Write_Xml(
             Stream stream,
@@ -412,14 +440,14 @@ namespace DynamicLeveledLists
             bool doMasks = true,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: out errorMask,
                 doMasks: doMasks,
                 translationMask: translationMask);
-            topNode.Elements().First().Save(stream);
+            node.Elements().First().Save(stream);
         }
 
         public void Write_Xml(
@@ -428,13 +456,13 @@ namespace DynamicLeveledLists
             TranslationCrystal translationMask,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: errorMask,
                 translationMask: translationMask);
-            topNode.Elements().First().Save(stream);
+            node.Elements().First().Save(stream);
         }
         public void Write_Xml(
             XElement node,
@@ -442,8 +470,8 @@ namespace DynamicLeveledLists
             SpawningPerformance_TranslationMask translationMask = null)
         {
             this.Write_Xml(
-                node: node,
                 name: name,
+                node: node,
                 errorMask: null,
                 translationMask: translationMask.GetCrystal());
         }
@@ -452,26 +480,26 @@ namespace DynamicLeveledLists
             string path,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: null,
                 translationMask: null);
-            topNode.Elements().First().SaveIfChanged(path);
+            node.Elements().First().SaveIfChanged(path);
         }
 
         public void Write_Xml(
             Stream stream,
             string name = null)
         {
-            XElement topNode = new XElement("topnode");
+            var node = new XElement("topnode");
             Write_Xml(
-                node: topNode,
                 name: name,
+                node: node,
                 errorMask: null,
                 translationMask: null);
-            topNode.Elements().First().Save(stream);
+            node.Elements().First().Save(stream);
         }
 
         public void Write_Xml(
@@ -482,130 +510,12 @@ namespace DynamicLeveledLists
         {
             SpawningPerformanceCommon.Write_Xml(
                 item: this,
-                node: node,
                 name: name,
+                node: node,
                 errorMask: errorMask,
                 translationMask: translationMask);
         }
         #endregion
-
-        protected static void Fill_Xml_Internal(
-            SpawningPerformance item,
-            XElement root,
-            string name,
-            ErrorMaskBuilder errorMask,
-            TranslationCrystal translationMask)
-        {
-            switch (name)
-            {
-                case "Delay":
-                    try
-                    {
-                        errorMask?.PushIndex((int)SpawningPerformance_FieldIndex.Delay);
-                        if (BooleanXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Boolean DelayParse,
-                            errorMask: errorMask))
-                        {
-                            item.Delay = DelayParse;
-                        }
-                        else
-                        {
-                            item.Delay = default(Boolean);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "Confirm":
-                    try
-                    {
-                        errorMask?.PushIndex((int)SpawningPerformance_FieldIndex.Confirm);
-                        if (BooleanXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Boolean ConfirmParse,
-                            errorMask: errorMask))
-                        {
-                            item.Confirm = ConfirmParse;
-                        }
-                        else
-                        {
-                            item.Confirm = default(Boolean);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "Cleanup":
-                    try
-                    {
-                        errorMask?.PushIndex((int)SpawningPerformance_FieldIndex.Cleanup);
-                        if (BooleanXmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Boolean CleanupParse,
-                            errorMask: errorMask))
-                        {
-                            item.Cleanup = CleanupParse;
-                        }
-                        else
-                        {
-                            item.Cleanup = default(Boolean);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                case "CleanupBatch":
-                    try
-                    {
-                        errorMask?.PushIndex((int)SpawningPerformance_FieldIndex.CleanupBatch);
-                        if (Int16XmlTranslation.Instance.Parse(
-                            root: root,
-                            item: out Int16 CleanupBatchParse,
-                            errorMask: errorMask))
-                        {
-                            item.CleanupBatch = CleanupBatchParse;
-                        }
-                        else
-                        {
-                            item.CleanupBatch = default(Int16);
-                        }
-                    }
-                    catch (Exception ex)
-                    when (errorMask != null)
-                    {
-                        errorMask.ReportException(ex);
-                    }
-                    finally
-                    {
-                        errorMask?.PopIndex();
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
 
         #endregion
 
@@ -676,32 +586,27 @@ namespace DynamicLeveledLists
             return ret;
         }
 
-        public void CopyFieldsFrom(
-            ISpawningPerformanceGetter rhs,
-            NotifyingFireParameters cmds = null)
+        public void CopyFieldsFrom(ISpawningPerformanceGetter rhs)
         {
             this.CopyFieldsFrom(
                 rhs: (ISpawningPerformanceGetter)rhs,
                 def: null,
                 doMasks: false,
                 errorMask: out var errMask,
-                copyMask: null,
-                cmds: cmds);
+                copyMask: null);
         }
 
         public void CopyFieldsFrom(
             ISpawningPerformanceGetter rhs,
             SpawningPerformance_CopyMask copyMask,
-            ISpawningPerformanceGetter def = null,
-            NotifyingFireParameters cmds = null)
+            ISpawningPerformanceGetter def = null)
         {
             this.CopyFieldsFrom(
                 rhs: rhs,
                 def: def,
                 doMasks: false,
                 errorMask: out var errMask,
-                copyMask: copyMask,
-                cmds: cmds);
+                copyMask: copyMask);
         }
 
         public void CopyFieldsFrom(
@@ -709,7 +614,6 @@ namespace DynamicLeveledLists
             out SpawningPerformance_ErrorMask errorMask,
             SpawningPerformance_CopyMask copyMask = null,
             ISpawningPerformanceGetter def = null,
-            NotifyingFireParameters cmds = null,
             bool doMasks = true)
         {
             var errorMaskBuilder = new ErrorMaskBuilder();
@@ -718,8 +622,7 @@ namespace DynamicLeveledLists
                 rhs: rhs,
                 def: def,
                 errorMask: errorMaskBuilder,
-                copyMask: copyMask,
-                cmds: cmds);
+                copyMask: copyMask);
             errorMask = SpawningPerformance_ErrorMask.Factory(errorMaskBuilder);
         }
 
@@ -728,7 +631,6 @@ namespace DynamicLeveledLists
             ErrorMaskBuilder errorMask,
             SpawningPerformance_CopyMask copyMask = null,
             ISpawningPerformanceGetter def = null,
-            NotifyingFireParameters cmds = null,
             bool doMasks = true)
         {
             SpawningPerformanceCommon.CopyFieldsFrom(
@@ -736,12 +638,10 @@ namespace DynamicLeveledLists
                 rhs: rhs,
                 def: def,
                 errorMask: errorMask,
-                copyMask: copyMask,
-                cmds: cmds);
+                copyMask: copyMask);
         }
 
-        void ILoquiObjectSetter.SetNthObject(ushort index, object obj, NotifyingFireParameters cmds) => this.SetNthObject(index, obj, cmds);
-        protected void SetNthObject(ushort index, object obj, NotifyingFireParameters cmds = null)
+        protected void SetNthObject(ushort index, object obj)
         {
             SpawningPerformance_FieldIndex enu = (SpawningPerformance_FieldIndex)index;
             switch (enu)
@@ -763,17 +663,17 @@ namespace DynamicLeveledLists
             }
         }
 
-        partial void ClearPartial(NotifyingUnsetParameters cmds);
+        partial void ClearPartial();
 
-        protected void CallClearPartial_Internal(NotifyingUnsetParameters cmds)
+        protected void CallClearPartial_Internal()
         {
-            ClearPartial(cmds);
+            ClearPartial();
         }
 
-        public void Clear(NotifyingUnsetParameters cmds = null)
+        public void Clear()
         {
-            CallClearPartial_Internal(cmds);
-            SpawningPerformanceCommon.Clear(this, cmds);
+            CallClearPartial_Internal();
+            SpawningPerformanceCommon.Clear(this);
         }
 
 
@@ -811,11 +711,6 @@ namespace DynamicLeveledLists
                     throw new ArgumentException($"Unknown enum type: {enu}");
             }
         }
-        public static void CopyIn(IEnumerable<KeyValuePair<ushort, object>> fields, SpawningPerformance obj)
-        {
-            ILoquiObjectExt.CopyFieldsIn(obj, fields, def: null, skipProtected: false, cmds: null);
-        }
-
     }
     #endregion
 
@@ -1076,8 +971,7 @@ namespace DynamicLeveledLists.Internals
             ISpawningPerformanceGetter rhs,
             ISpawningPerformanceGetter def,
             ErrorMaskBuilder errorMask,
-            SpawningPerformance_CopyMask copyMask,
-            NotifyingFireParameters cmds = null)
+            SpawningPerformance_CopyMask copyMask)
         {
             if (copyMask?.Delay ?? true)
             {
@@ -1151,91 +1045,7 @@ namespace DynamicLeveledLists.Internals
 
         #endregion
 
-        public static void SetNthObjectHasBeenSet(
-            ushort index,
-            bool on,
-            ISpawningPerformance obj,
-            NotifyingFireParameters cmds = null)
-        {
-            SpawningPerformance_FieldIndex enu = (SpawningPerformance_FieldIndex)index;
-            switch (enu)
-            {
-                case SpawningPerformance_FieldIndex.Delay:
-                case SpawningPerformance_FieldIndex.Confirm:
-                case SpawningPerformance_FieldIndex.Cleanup:
-                case SpawningPerformance_FieldIndex.CleanupBatch:
-                    if (on) break;
-                    throw new ArgumentException("Tried to unset a field which does not have this functionality." + index);
-                default:
-                    throw new ArgumentException($"Index is out of range: {index}");
-            }
-        }
-
-        public static void UnsetNthObject(
-            ushort index,
-            ISpawningPerformance obj,
-            NotifyingUnsetParameters cmds = null)
-        {
-            SpawningPerformance_FieldIndex enu = (SpawningPerformance_FieldIndex)index;
-            switch (enu)
-            {
-                case SpawningPerformance_FieldIndex.Delay:
-                    obj.Delay = default(Boolean);
-                    break;
-                case SpawningPerformance_FieldIndex.Confirm:
-                    obj.Confirm = default(Boolean);
-                    break;
-                case SpawningPerformance_FieldIndex.Cleanup:
-                    obj.Cleanup = default(Boolean);
-                    break;
-                case SpawningPerformance_FieldIndex.CleanupBatch:
-                    obj.CleanupBatch = default(Int16);
-                    break;
-                default:
-                    throw new ArgumentException($"Index is out of range: {index}");
-            }
-        }
-
-        public static bool GetNthObjectHasBeenSet(
-            ushort index,
-            ISpawningPerformance obj)
-        {
-            SpawningPerformance_FieldIndex enu = (SpawningPerformance_FieldIndex)index;
-            switch (enu)
-            {
-                case SpawningPerformance_FieldIndex.Delay:
-                case SpawningPerformance_FieldIndex.Confirm:
-                case SpawningPerformance_FieldIndex.Cleanup:
-                case SpawningPerformance_FieldIndex.CleanupBatch:
-                    return true;
-                default:
-                    throw new ArgumentException($"Index is out of range: {index}");
-            }
-        }
-
-        public static object GetNthObject(
-            ushort index,
-            ISpawningPerformanceGetter obj)
-        {
-            SpawningPerformance_FieldIndex enu = (SpawningPerformance_FieldIndex)index;
-            switch (enu)
-            {
-                case SpawningPerformance_FieldIndex.Delay:
-                    return obj.Delay;
-                case SpawningPerformance_FieldIndex.Confirm:
-                    return obj.Confirm;
-                case SpawningPerformance_FieldIndex.Cleanup:
-                    return obj.Cleanup;
-                case SpawningPerformance_FieldIndex.CleanupBatch:
-                    return obj.CleanupBatch;
-                default:
-                    throw new ArgumentException($"Index is out of range: {index}");
-            }
-        }
-
-        public static void Clear(
-            ISpawningPerformance item,
-            NotifyingUnsetParameters cmds = null)
+        public static void Clear(ISpawningPerformance item)
         {
             item.Delay = default(Boolean);
             item.Confirm = default(Boolean);
@@ -1245,17 +1055,23 @@ namespace DynamicLeveledLists.Internals
 
         public static SpawningPerformance_Mask<bool> GetEqualsMask(
             this ISpawningPerformanceGetter item,
-            ISpawningPerformanceGetter rhs)
+            ISpawningPerformanceGetter rhs,
+            EqualsMaskHelper.Include include = EqualsMaskHelper.Include.All)
         {
             var ret = new SpawningPerformance_Mask<bool>();
-            FillEqualsMask(item, rhs, ret);
+            FillEqualsMask(
+                item: item,
+                rhs: rhs,
+                ret: ret,
+                include: include);
             return ret;
         }
 
         public static void FillEqualsMask(
             ISpawningPerformanceGetter item,
             ISpawningPerformanceGetter rhs,
-            SpawningPerformance_Mask<bool> ret)
+            SpawningPerformance_Mask<bool> ret,
+            EqualsMaskHelper.Include include = EqualsMaskHelper.Include.All)
         {
             if (rhs == null) return;
             ret.Delay = item.Delay == rhs.Delay;
@@ -1340,8 +1156,8 @@ namespace DynamicLeveledLists.Internals
         {
             ErrorMaskBuilder errorMaskBuilder = doMasks ? new ErrorMaskBuilder() : null;
             Write_Xml(
-                node: node,
                 name: name,
+                node: node,
                 item: item,
                 errorMask: errorMaskBuilder,
                 translationMask: translationMask?.GetCrystal());
@@ -1361,10 +1177,24 @@ namespace DynamicLeveledLists.Internals
             {
                 elem.SetAttributeValue("type", "DynamicLeveledLists.SpawningPerformance");
             }
+            WriteToNode_Xml(
+                item: item,
+                node: elem,
+                errorMask: errorMask,
+                translationMask: translationMask);
+        }
+        #endregion
+
+        public static void WriteToNode_Xml(
+            this SpawningPerformance item,
+            XElement node,
+            ErrorMaskBuilder errorMask,
+            TranslationCrystal translationMask)
+        {
             if ((translationMask?.GetShouldTranslate((int)SpawningPerformance_FieldIndex.Delay) ?? true))
             {
                 BooleanXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.Delay),
                     item: item.Delay,
                     fieldIndex: (int)SpawningPerformance_FieldIndex.Delay,
@@ -1373,7 +1203,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)SpawningPerformance_FieldIndex.Confirm) ?? true))
             {
                 BooleanXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.Confirm),
                     item: item.Confirm,
                     fieldIndex: (int)SpawningPerformance_FieldIndex.Confirm,
@@ -1382,7 +1212,7 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)SpawningPerformance_FieldIndex.Cleanup) ?? true))
             {
                 BooleanXmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.Cleanup),
                     item: item.Cleanup,
                     fieldIndex: (int)SpawningPerformance_FieldIndex.Cleanup,
@@ -1391,14 +1221,168 @@ namespace DynamicLeveledLists.Internals
             if ((translationMask?.GetShouldTranslate((int)SpawningPerformance_FieldIndex.CleanupBatch) ?? true))
             {
                 Int16XmlTranslation.Instance.Write(
-                    node: elem,
+                    node: node,
                     name: nameof(item.CleanupBatch),
                     item: item.CleanupBatch,
                     fieldIndex: (int)SpawningPerformance_FieldIndex.CleanupBatch,
                     errorMask: errorMask);
             }
         }
-        #endregion
+
+        public static void FillPublic_Xml(
+            this SpawningPerformance item,
+            XElement node,
+            ErrorMaskBuilder errorMask,
+            TranslationCrystal translationMask)
+        {
+            try
+            {
+                foreach (var elem in node.Elements())
+                {
+                    SpawningPerformanceCommon.FillPublicElement_Xml(
+                        item: item,
+                        node: elem,
+                        name: elem.Name.LocalName,
+                        errorMask: errorMask,
+                        translationMask: translationMask);
+                }
+            }
+            catch (Exception ex)
+            when (errorMask != null)
+            {
+                errorMask.ReportException(ex);
+            }
+        }
+
+        public static void FillPublicElement_Xml(
+            this SpawningPerformance item,
+            XElement node,
+            string name,
+            ErrorMaskBuilder errorMask,
+            TranslationCrystal translationMask)
+        {
+            switch (name)
+            {
+                case "Delay":
+                    if ((translationMask?.GetShouldTranslate((int)SpawningPerformance_FieldIndex.Delay) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)SpawningPerformance_FieldIndex.Delay);
+                            if (BooleanXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Boolean DelayParse,
+                                errorMask: errorMask))
+                            {
+                                item.Delay = DelayParse;
+                            }
+                            else
+                            {
+                                item.Delay = default(Boolean);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "Confirm":
+                    if ((translationMask?.GetShouldTranslate((int)SpawningPerformance_FieldIndex.Confirm) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)SpawningPerformance_FieldIndex.Confirm);
+                            if (BooleanXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Boolean ConfirmParse,
+                                errorMask: errorMask))
+                            {
+                                item.Confirm = ConfirmParse;
+                            }
+                            else
+                            {
+                                item.Confirm = default(Boolean);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "Cleanup":
+                    if ((translationMask?.GetShouldTranslate((int)SpawningPerformance_FieldIndex.Cleanup) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)SpawningPerformance_FieldIndex.Cleanup);
+                            if (BooleanXmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Boolean CleanupParse,
+                                errorMask: errorMask))
+                            {
+                                item.Cleanup = CleanupParse;
+                            }
+                            else
+                            {
+                                item.Cleanup = default(Boolean);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                case "CleanupBatch":
+                    if ((translationMask?.GetShouldTranslate((int)SpawningPerformance_FieldIndex.CleanupBatch) ?? true))
+                    {
+                        try
+                        {
+                            errorMask?.PushIndex((int)SpawningPerformance_FieldIndex.CleanupBatch);
+                            if (Int16XmlTranslation.Instance.Parse(
+                                node: node,
+                                item: out Int16 CleanupBatchParse,
+                                errorMask: errorMask))
+                            {
+                                item.CleanupBatch = CleanupBatchParse;
+                            }
+                            else
+                            {
+                                item.CleanupBatch = default(Int16);
+                            }
+                        }
+                        catch (Exception ex)
+                        when (errorMask != null)
+                        {
+                            errorMask.ReportException(ex);
+                        }
+                        finally
+                        {
+                            errorMask?.PopIndex();
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
 
         #endregion
 

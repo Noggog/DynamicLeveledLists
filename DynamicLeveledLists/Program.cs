@@ -15,8 +15,8 @@ namespace DynamicLeveledLists
     class Program
     {
         const string Prefix = "DLL";
-        static Dictionary<FormKey, MajorRecord> sourceRecords;
-        static Dictionary<StringCaseAgnostic, MajorRecord> sourceEdidRecords = new Dictionary<StringCaseAgnostic, MajorRecord>();
+        static Dictionary<FormKey, IMajorRecordCommon> sourceRecords;
+        static Dictionary<StringCaseAgnostic, IMajorRecordCommon> sourceEdidRecords = new Dictionary<StringCaseAgnostic, IMajorRecordCommon>();
         static OblivionMod dynamicLeveledLists;
         static ModKey sourceModKey = new ModKey("DLLSource", master: false);
         static ModSettings settings = new ModSettings();
@@ -46,7 +46,7 @@ namespace DynamicLeveledLists
             },
             Performance = new SpawningPerformance()
             {
-                Delay = false,
+                Delay = true,
                 Cleanup = false,
                 Confirm = true,
                 CleanupBatch = 200,
@@ -109,7 +109,7 @@ namespace DynamicLeveledLists
             var source = GetSourceMod(modList);
             sourceRecords = dynamicLeveledLists.CopyInDuplicate(source);
             sourceModKey = source.ModKey;
-            sourceEdidRecords.Set(sourceRecords.Values.Select(m => new KeyValuePair<StringCaseAgnostic, MajorRecord>(m.EditorID, m)));
+            sourceEdidRecords.Set(sourceRecords.Values.Select(m => new KeyValuePair<StringCaseAgnostic, IMajorRecordCommon>(m.EditorID, m)));
         }
 
         static void ModifyLLists(OblivionMod flattenedModList)
@@ -169,7 +169,7 @@ namespace DynamicLeveledLists
                 // Create a custom dummy, with name field "pointing" to LList
                 var ratNPC = GetDummyRat(dynamicLeveledLists.GetNextFormKey());
                 ratNPC.EditorID = $"DLLDummy{ratCount++}";
-                ratNPC.Name = $"DLLdummy";
+                ratNPC.Name = $"{llist.FormKey.ToString()}";
                 dynamicLeveledLists.Creatures.Items.Set(ratNPC);
 
                 // Add dummy to LList
